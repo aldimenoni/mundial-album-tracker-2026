@@ -14,8 +14,8 @@ export type AlbumSpreadDefinition = {
 
 const WORLD_CUP_GROUPS: Array<{ label: string; teams: string[] }> = [
   { label: "Grupo A", teams: ["Mexico", "Sudafrica", "Corea del Sur", "Chequia"] },
-  { label: "Grupo B", teams: ["Canada", "Suiza", "Qatar", "Bosnia y Herzegovina"] },
-  { label: "Grupo C", teams: ["Brasil", "Marruecos", "Escocia", "Haiti"] },
+  { label: "Grupo B", teams: ["Canada", "Bosnia y Herzegovina", "Qatar", "Suiza"] },
+  { label: "Grupo C", teams: ["Brasil", "Marruecos", "Haiti", "Escocia"] },
   { label: "Grupo D", teams: ["Estados Unidos", "Paraguay", "Australia", "Turquia"] },
   { label: "Grupo E", teams: ["Alemania", "Curazao", "Costa de Marfil", "Ecuador"] },
   { label: "Grupo F", teams: ["Paises Bajos", "Japon", "Suecia", "Tunez"] },

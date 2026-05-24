@@ -20,25 +20,28 @@ function optionKey(option: SettlementOptionDto): string {
   return `${option.give?.code ?? "-"}:${option.receive?.code ?? "-"}`;
 }
 
-function mergeOptions(options: SettlementOptionDto[]): ExchangeSelection {
-  return options.reduce<ExchangeSelection>(
-    (selection, option) => ({
-      stickersGivenByMe: option.give
-        ? [...selection.stickersGivenByMe, option.give.code]
-        : selection.stickersGivenByMe,
-      stickersGivenByOther: option.receive
-        ? [...selection.stickersGivenByOther, option.receive.code]
-        : selection.stickersGivenByOther
-    }),
-    { stickersGivenByMe: [], stickersGivenByOther: [] }
-  );
-}
-
 function optionToSelection(option: SettlementOptionDto): ExchangeSelection {
   return {
     stickersGivenByMe: option.give ? [option.give.code] : [],
     stickersGivenByOther: option.receive ? [option.receive.code] : []
   };
+}
+
+export function optionsToAllSelection(options: SettlementOptionDto[]): ExchangeSelection {
+  return options.reduce<ExchangeSelection>(
+    (selection, option) => {
+      if (option.give) {
+        selection.stickersGivenByMe.push(option.give.code);
+      }
+
+      if (option.receive) {
+        selection.stickersGivenByOther.push(option.receive.code);
+      }
+
+      return selection;
+    },
+    { stickersGivenByMe: [], stickersGivenByOther: [] }
+  );
 }
 
 function StickerChip({
@@ -115,14 +118,11 @@ export function ExchangeOptionList({
   busyAllLabel = "Intercambiando todas..."
 }: ExchangeOptionListProps) {
   if (options.length === 0) {
-    return (
-      <p className="pending-settlement-hint">
-        Cuando el otro cargue repetidas, vas a poder saldar acá.
-      </p>
-    );
+    return null;
   }
 
-  const allSelection = mergeOptions(options);
+  const showConfirmAll = options.length > 1 && Boolean(onConfirmAll);
+  const isConfirmingAll = isBusy && busyOptionKey === "all";
 
   return (
     <div className="suggestions">
@@ -152,15 +152,22 @@ export function ExchangeOptionList({
         })}
       </div>
 
-      {options.length > 1 && onConfirmAll ? (
+      {showConfirmAll ? (
         <div className="exchange-action-buttons exchange-action-buttons-all">
           <button
             className="primary-button"
             type="button"
             disabled={isBusy}
-            onClick={() => onConfirmAll(allSelection)}
+            onClick={() => onConfirmAll?.(optionsToAllSelection(options))}
           >
-            {isBusy && busyOptionKey === "all" ? busyAllLabel : confirmAllLabel}
+            {isConfirmingAll ? (
+              <>
+                <Loader2 size={18} className="exchange-option-spinner" aria-hidden="true" />
+                {busyAllLabel}
+              </>
+            ) : (
+              confirmAllLabel
+            )}
           </button>
         </div>
       ) : null}

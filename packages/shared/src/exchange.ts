@@ -77,7 +77,7 @@ export interface PendingSettlementDto {
 
 export const EXCHANGE_TYPE_LABELS: Record<ExchangeType, string> = {
   DIRECT: "Intercambio directo",
-  MULTIPLE: "Intercambio múltiple",
+  MULTIPLE: "Intercambios uno a uno",
   PARTIAL: "Intercambio parcial",
   PENDING: "Intercambio parcial",
   INFO_INSUFFICIENT: "Información insuficiente",

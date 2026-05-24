@@ -1,15 +1,11 @@
 import type { CompareAlbumDto } from "@mundial-album/shared";
-import { EXCHANGE_TYPE_LABELS, buildExchangeBalancePreview } from "@mundial-album/shared";
+import { EXCHANGE_TYPE_LABELS } from "@mundial-album/shared";
 import { CustomExchangePanel } from "./CustomExchangePanel";
 import {
   ExchangeOptionList,
   suggestionsToOptions,
   type ExchangeSelection
 } from "./ExchangeOptionList";
-
-function hasExchangeContent(result: CompareAlbumDto): boolean {
-  return result.type !== "NOT_AVAILABLE";
-}
 
 function canShowCustomExchange(result: CompareAlbumDto): boolean {
   return result.myRepeatedStickers.length > 0 || result.otherRepeatedStickers.length > 0;
@@ -30,72 +26,50 @@ export function CompareResult({
   isExecuting?: boolean;
   executingOptionKey?: string | null;
 }) {
-  const showExchange = hasExchangeContent(result);
   const showCustomExchange = canShowCustomExchange(result);
   const options = suggestionsToOptions(result.suggestions);
-  const giveCount = result.canGive.length;
-  const receiveCount = result.canReceive.length;
-  const canExecuteSuggested =
-    Boolean(onExecuteExchange) &&
-    result.type !== "NOT_AVAILABLE" &&
-    result.type !== "INFO_INSUFFICIENT" &&
-    options.length > 0;
+  const pairCount = options.length;
+  const canExecuteSuggested = Boolean(onExecuteExchange) && options.length > 0;
 
   return (
     <section className="compare-result">
       <div className="compare-result-header">
         <h3>@{result.otherUser.name}</h3>
-        {showExchange ? (
+        {pairCount > 0 ? (
           <>
             <span className={`exchange-type-badge exchange-type-${result.type.toLowerCase()}`}>
               {EXCHANGE_TYPE_LABELS[result.type]}
             </span>
-            {giveCount > 0 || receiveCount > 0 ? (
-              <p className="exchange-totals-line">
-                Das {giveCount} · Recibís {receiveCount}
-              </p>
-            ) : null}
+            <p className="exchange-totals-line">
+              {pairCount === 1
+                ? "1 cambio uno a uno disponible"
+                : `${pairCount} cambios uno a uno disponibles`}
+            </p>
           </>
         ) : null}
       </div>
 
-      {showExchange ? (
-        <>
-          {result.pendingCountForMe > 0 || result.pendingCountForOther > 0 ? (
-            <div className="exchange-balance-banner">
-              {buildExchangeBalancePreview({
-                otherUserName: result.otherUser.name,
-                giveCount,
-                receiveCount,
-                pendingCountForMe: result.pendingCountForMe,
-                pendingCountForOther: result.pendingCountForOther
-              })}
-            </div>
-          ) : null}
-
-          {result.message && options.length === 0 ? (
-            <p className="exchange-message">{result.message}</p>
-          ) : null}
-
-          {canExecuteSuggested || options.length > 0 ? (
-            <ExchangeOptionList
-              options={options}
-              isBusy={isExecuting && executingOptionKey !== "custom"}
-              busyOptionKey={executingOptionKey}
-              confirmAllLabel={result.type === "PENDING" ? "Dar todas" : "Intercambiar todas"}
-              busyAllLabel={result.type === "PENDING" ? "Entregando..." : "Intercambiando todas..."}
-              {...(canExecuteSuggested && onExecuteExchange
-                ? {
-                    onConfirmOne: (selection, optionKey) =>
-                      onExecuteExchange(result, selection, optionKey),
-                    onConfirmAll: (selection) => onExecuteExchange(result, selection, "all")
-                  }
-                : {})}
-            />
-          ) : null}
-        </>
+      {pairCount > 0 ? (
+        <ExchangeOptionList
+          options={options}
+          isBusy={isExecuting && executingOptionKey !== "custom"}
+          busyOptionKey={executingOptionKey}
+          {...(canExecuteSuggested && onExecuteExchange
+            ? {
+                onConfirmOne: (selection, optionKey) =>
+                  onExecuteExchange(result, selection, optionKey),
+                ...(pairCount > 1
+                  ? {
+                      onConfirmAll: (selection) =>
+                        onExecuteExchange(result, selection, "all"),
+                      confirmAllLabel: `Intercambiar todas (${pairCount})`
+                    }
+                  : {})
+              }
+            : {})}
+        />
       ) : (
-        <p className="empty-state">{result.message}</p>
+        <p className="exchange-message">{result.message}</p>
       )}
 
       {showCustomExchange ? (

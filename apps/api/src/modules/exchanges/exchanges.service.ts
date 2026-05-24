@@ -10,6 +10,10 @@ import { toUserDto } from "../../utils/dto.js";
 import { HttpError } from "../../utils/http-error.js";
 import { getAlbum, getAlbumSummary } from "../albums/albums.service.js";
 import { buildCompareAlbumDto } from "./exchange.mapper.js";
+import {
+  isValidAllOneToOneSelection,
+  isValidOneToOneSelection
+} from "./exchange.service.js";
 import { computeGiveTransfer, computeReceiveTransfer } from "./exchange-transfer.js";
 import {
   classifyCustomExchangeType,
@@ -73,14 +77,11 @@ async function buildExchangeSnapshot(
     throw new HttpError(409, comparison.message);
   }
 
-  const transferPlan = selection
-    ? validateAndBuildSelection(selection, canGive, canReceive, comparison.pendingCountForMe, comparison.pendingCountForOther)
-    : buildSettlementTransferPlan(
-        canGive,
-        canReceive,
-        comparison.pendingCountForMe,
-        comparison.pendingCountForOther
-      );
+  if (!selection) {
+    throw new HttpError(400, "Seleccioná un intercambio uno a uno.");
+  }
+
+  const transferPlan = validateSuggestedOneToOneSelection(selection, canGive, canReceive);
 
   if (transferPlan.settledCount === 0) {
     throw new HttpError(409, comparison.message);
@@ -89,9 +90,9 @@ async function buildExchangeSnapshot(
   return {
     stickersGivenByMe: transferPlan.stickersGivenByMe,
     stickersGivenByOther: transferPlan.stickersGivenByOther,
-    pendingCountForMe: comparison.pendingCountForMe,
-    pendingCountForOther: comparison.pendingCountForOther,
-    type: comparison.type,
+    pendingCountForMe: 0,
+    pendingCountForOther: 0,
+    type: transferPlan.settledCount === 1 ? "DIRECT" : "MULTIPLE",
     notes: notes ?? comparison.message
   };
 }
@@ -121,6 +122,30 @@ async function buildCustomExchangeSnapshot(
     type: classifyCustomExchangeType(giveCount, receiveCount),
     notes: notes ?? `Intercambio personalizado con @${otherAlbum.user.name}.`
   };
+}
+
+function validateSuggestedOneToOneSelection(
+  selection: SettlementStep,
+  canGive: string[],
+  canReceive: string[]
+): SettlementTransferPlan {
+  if (isValidOneToOneSelection(selection, canGive, canReceive)) {
+    return {
+      stickersGivenByMe: selection.stickersGivenByMe,
+      stickersGivenByOther: selection.stickersGivenByOther,
+      settledCount: 1
+    };
+  }
+
+  if (isValidAllOneToOneSelection(selection, canGive, canReceive)) {
+    return {
+      stickersGivenByMe: selection.stickersGivenByMe,
+      stickersGivenByOther: selection.stickersGivenByOther,
+      settledCount: selection.stickersGivenByMe.length
+    };
+  }
+
+  throw new HttpError(409, "La selección de figuritas ya no está disponible para intercambiar.");
 }
 
 function validateAndBuildSelection(
@@ -431,11 +456,7 @@ export async function executeExchange(
         snapshot.stickersGivenByMe.length,
         snapshot.stickersGivenByOther.length
       )
-    : resolveProposalPending(snapshot, {
-        stickersGivenByMe: snapshot.stickersGivenByMe,
-        stickersGivenByOther: snapshot.stickersGivenByOther,
-        settledCount: settledPairs
-      });
+    : { pendingCountForMe: 0, pendingCountForOther: 0 };
   const status =
     nextPending.pendingCountForMe > 0 || nextPending.pendingCountForOther > 0
       ? "PENDING_SETTLEMENT"

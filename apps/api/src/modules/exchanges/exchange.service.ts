@@ -1,6 +1,4 @@
 import type { CompareAlbumUserStatus, ExchangeAnalysisDto } from "@mundial-album/shared";
-import { buildExchangeBalancePreview } from "@mundial-album/shared";
-import { buildSettlementSteps } from "./pending-settlement.js";
 
 export type ExchangePairSuggestion = {
   give: string | null;
@@ -36,10 +34,6 @@ function stickerMap(stickers: ExchangeStickerState[]): Map<string, ExchangeStick
   return new Map(stickers.map((sticker) => [sticker.stickerId, sticker]));
 }
 
-function isKnownMissing(sticker: ExchangeStickerState | undefined): boolean {
-  return Boolean(sticker?.tracked && sticker.quantityOwned === 0);
-}
-
 function isOfferableRepeated(sticker: ExchangeStickerState | undefined): boolean {
   return (sticker?.quantityRepeated ?? 0) > 0;
 }
@@ -68,41 +62,16 @@ export function computeCanReceive(
     .map((sticker) => sticker.code);
 }
 
-function buildSuggestions(
+export function buildOneToOneSuggestions(
   canGive: string[],
-  canReceive: string[],
-  pendingCountForMe: number,
-  pendingCountForOther: number
+  canReceive: string[]
 ): ExchangePairSuggestion[] {
-  return buildSettlementSteps(
-    canGive,
-    canReceive,
-    pendingCountForMe,
-    pendingCountForOther
-  ).map((step) => ({
-    give: step.stickersGivenByMe[0] ?? null,
-    receive: step.stickersGivenByOther[0] ?? null
+  const pairCount = Math.min(canGive.length, canReceive.length);
+
+  return Array.from({ length: pairCount }, (_, index) => ({
+    give: canGive[index] ?? null,
+    receive: canReceive[index] ?? null
   }));
-}
-
-function buildPartialMessage(
-  otherName: string,
-  canGiveCount: number,
-  canReceiveCount: number,
-  pendingCountForMe: number,
-  pendingCountForOther: number
-): string {
-  return buildExchangeBalancePreview({
-    otherUserName: otherName,
-    giveCount: canGiveCount,
-    receiveCount: canReceiveCount,
-    pendingCountForMe,
-    pendingCountForOther
-  });
-}
-
-function buildPendingMessage(otherName: string, canGiveCount: number): string {
-  return `Podés darle ${canGiveCount} repetida${canGiveCount === 1 ? "" : "s"} porque no ${canGiveCount === 1 ? "la tiene" : "las tiene"}. Das ${canGiveCount} y no recibís ahora; quedarían ${canGiveCount} ${canGiveCount === 1 ? "figurita" : "figuritas"} a tu favor con @${otherName}.`;
 }
 
 function buildExchangeAlbumStatus(stickers: ExchangeStickerState[]): CompareAlbumUserStatus {
@@ -118,60 +87,32 @@ function buildExchangeAlbumStatus(stickers: ExchangeStickerState[]): CompareAlbu
 export function determineExchangeType(
   canGive: string[],
   canReceive: string[],
-  myStatus: CompareAlbumUserStatus,
-  otherStatus: CompareAlbumUserStatus,
   otherName: string
 ): Pick<ExchangeAnalysisDto, "type" | "pendingCountForMe" | "pendingCountForOther" | "message"> {
-  if (canGive.length === 0 && canReceive.length === 0) {
+  if (canGive.length === 0 || canReceive.length === 0) {
     return {
       type: "NOT_AVAILABLE",
       pendingCountForMe: 0,
       pendingCountForOther: 0,
-      message: "No encontramos coincidencias para intercambio por ahora."
+      message:
+        canGive.length > 0
+          ? `@${otherName} no tiene repetidas para un intercambio uno a uno. Probá el intercambio personalizado.`
+          : canReceive.length > 0
+            ? `No tenés repetidas que le falten a @${otherName}.`
+            : "No hay intercambios uno a uno disponibles por ahora."
     };
   }
 
-  if (canGive.length > 0 && !otherStatus.hasRepeatedStickers) {
-    return {
-      type: "PENDING",
-      pendingCountForMe: canGive.length,
-      pendingCountForOther: 0,
-      message: buildPendingMessage(otherName, canGive.length)
-    };
-  }
-
-  const pendingCountForMe = Math.max(0, canGive.length - canReceive.length);
-  const pendingCountForOther = Math.max(0, canReceive.length - canGive.length);
-
-  if (pendingCountForMe > 0 || pendingCountForOther > 0) {
-    return {
-      type: "PARTIAL",
-      pendingCountForMe,
-      pendingCountForOther,
-      message: buildPartialMessage(
-        otherName,
-        canGive.length,
-        canReceive.length,
-        pendingCountForMe,
-        pendingCountForOther
-      )
-    };
-  }
-
-  if (canGive.length === 1 && canReceive.length === 1) {
-    return {
-      type: "DIRECT",
-      pendingCountForMe: 0,
-      pendingCountForOther: 0,
-      message: "Intercambio directo uno a uno sugerido."
-    };
-  }
+  const pairCount = Math.min(canGive.length, canReceive.length);
 
   return {
-    type: "MULTIPLE",
+    type: pairCount === 1 ? "DIRECT" : "MULTIPLE",
     pendingCountForMe: 0,
     pendingCountForOther: 0,
-    message: "Intercambio múltiple equivalente sugerido."
+    message:
+      pairCount === 1
+        ? "Intercambio uno a uno sugerido."
+        : `${pairCount} intercambios uno a uno sugeridos.`
   };
 }
 
@@ -180,30 +121,79 @@ export function analyzeExchange(input: ExchangeAnalysisInput): ExchangeAnalysisR
   const otherStatus = buildExchangeAlbumStatus(input.other.stickers);
   const canGive = computeCanGive(input.me.stickers, input.other.stickers);
   const canReceive = computeCanReceive(input.me.stickers, input.other.stickers);
-  const classification = determineExchangeType(
-    canGive,
-    canReceive,
-    myStatus,
-    otherStatus,
-    input.other.userName
-  );
+  const classification = determineExchangeType(canGive, canReceive, input.other.userName);
+  const suggestions = buildOneToOneSuggestions(canGive, canReceive);
 
   return {
     type: classification.type,
     canGive,
     canReceive,
-    pendingCountForMe: classification.pendingCountForMe,
-    pendingCountForOther: classification.pendingCountForOther,
+    pendingCountForMe: 0,
+    pendingCountForOther: 0,
     message: classification.message,
     myStatus,
     otherStatus,
-    suggestions: buildSuggestions(
-      canGive,
-      canReceive,
-      classification.pendingCountForMe,
-      classification.pendingCountForOther
-    )
+    suggestions
   };
+}
+
+export function buildAllOneToOneSelection(
+  canGive: string[],
+  canReceive: string[]
+): { stickersGivenByMe: string[]; stickersGivenByOther: string[] } {
+  const suggestions = buildOneToOneSuggestions(canGive, canReceive);
+
+  return {
+    stickersGivenByMe: suggestions.flatMap((pair) => (pair.give ? [pair.give] : [])),
+    stickersGivenByOther: suggestions.flatMap((pair) => (pair.receive ? [pair.receive] : []))
+  };
+}
+
+function selectionsMatch(
+  left: { stickersGivenByMe: string[]; stickersGivenByOther: string[] },
+  right: { stickersGivenByMe: string[]; stickersGivenByOther: string[] }
+): boolean {
+  return (
+    left.stickersGivenByMe.length === right.stickersGivenByMe.length &&
+    left.stickersGivenByOther.length === right.stickersGivenByOther.length &&
+    left.stickersGivenByMe.every((code, index) => code === right.stickersGivenByMe[index]) &&
+    left.stickersGivenByOther.every((code, index) => code === right.stickersGivenByOther[index])
+  );
+}
+
+export function isValidOneToOneSelection(
+  selection: { stickersGivenByMe: string[]; stickersGivenByOther: string[] },
+  canGive: string[],
+  canReceive: string[]
+): boolean {
+  if (selection.stickersGivenByMe.length !== 1 || selection.stickersGivenByOther.length !== 1) {
+    return false;
+  }
+
+  const give = selection.stickersGivenByMe[0];
+  const receive = selection.stickersGivenByOther[0];
+
+  if (!give || !receive) {
+    return false;
+  }
+
+  return buildOneToOneSuggestions(canGive, canReceive).some(
+    (pair) => pair.give === give && pair.receive === receive
+  );
+}
+
+export function isValidAllOneToOneSelection(
+  selection: { stickersGivenByMe: string[]; stickersGivenByOther: string[] },
+  canGive: string[],
+  canReceive: string[]
+): boolean {
+  const expected = buildAllOneToOneSelection(canGive, canReceive);
+
+  if (expected.stickersGivenByMe.length < 2) {
+    return false;
+  }
+
+  return selectionsMatch(selection, expected);
 }
 
 export function toExchangeStickerState(

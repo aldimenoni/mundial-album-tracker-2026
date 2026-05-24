@@ -1,11 +1,13 @@
 import {
   analyzeExchange,
+  buildOneToOneSuggestions,
   computeCanGive,
   computeCanReceive,
   determineExchangeType,
+  isValidAllOneToOneSelection,
+  isValidOneToOneSelection,
   toExchangeStickerState
 } from "./exchange.service.js";
-import type { CompareAlbumUserStatus } from "@mundial-album/shared";
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
@@ -17,15 +19,6 @@ function sticker(
   tracked: boolean
 ) {
   return toExchangeStickerState(id, code, owned, repeated, tracked);
-}
-
-function status(overrides: Partial<CompareAlbumUserStatus> = {}): CompareAlbumUserStatus {
-  return {
-    albumLoaded: true,
-    hasMissingTracked: true,
-    hasRepeatedStickers: true,
-    ...overrides
-  };
 }
 
 describe("ExchangeService", () => {
@@ -61,70 +54,29 @@ describe("ExchangeService", () => {
   });
 
   it("returns DIRECT for one-to-one exchange", () => {
-    const result = determineExchangeType(
-      ["ARG10"],
-      ["BRA5"],
-      status(),
-      status(),
-      "sofi"
-    );
+    const result = determineExchangeType(["ARG10"], ["BRA5"], "sofi");
 
     assert.equal(result.type, "DIRECT");
     assert.equal(result.pendingCountForMe, 0);
     assert.equal(result.pendingCountForOther, 0);
   });
 
-  it("returns MULTIPLE for balanced multi exchange", () => {
-    const result = determineExchangeType(
-      ["ARG10", "URU4"],
-      ["BRA5", "FRA8"],
-      status(),
-      status(),
-      "sofi"
-    );
+  it("returns MULTIPLE for several one-to-one exchanges", () => {
+    const result = determineExchangeType(["ARG10", "URU4"], ["BRA5", "FRA8"], "sofi");
 
     assert.equal(result.type, "MULTIPLE");
-  });
-
-  it("returns PARTIAL with pendingCountForMe when I give more than I receive", () => {
-    const result = determineExchangeType(
-      ["ARG10", "URU4", "ESP7"],
-      ["BRA5"],
-      status(),
-      status(),
-      "sofi"
-    );
-
-    assert.equal(result.type, "PARTIAL");
-    assert.equal(result.pendingCountForMe, 2);
-    assert.equal(result.pendingCountForOther, 0);
-  });
-
-  it("returns PARTIAL with pendingCountForOther when I receive more than I give", () => {
-    const result = determineExchangeType(
-      ["ARG10"],
-      ["BRA5", "FRA8", "GER3"],
-      status(),
-      status(),
-      "sofi"
-    );
-
-    assert.equal(result.type, "PARTIAL");
     assert.equal(result.pendingCountForMe, 0);
-    assert.equal(result.pendingCountForOther, 2);
   });
 
-  it("returns PENDING when other user has no repeated stickers loaded", () => {
-    const result = determineExchangeType(
-      ["ARG10", "URU4"],
-      [],
-      status(),
-      status({ hasRepeatedStickers: false }),
-      "sofi"
+  it("returns NOT_AVAILABLE when only one side can trade", () => {
+    assert.equal(
+      determineExchangeType(["ARG10", "URU4"], [], "sofi").type,
+      "NOT_AVAILABLE"
     );
-
-    assert.equal(result.type, "PENDING");
-    assert.equal(result.pendingCountForMe, 2);
+    assert.equal(
+      determineExchangeType([], ["BRA5"], "sofi").type,
+      "NOT_AVAILABLE"
+    );
   });
 
   it("calculates canReceive from repeated stickers even when mine is untracked", () => {
@@ -134,32 +86,60 @@ describe("ExchangeService", () => {
     assert.deepEqual(computeCanReceive(myStickers, otherStickers), ["ARG10"]);
   });
 
-  it("returns PARTIAL when other has repeated stickers and I can receive without tracking missing", () => {
-    const analysis = analyzeExchange({
-      me: {
-        userId: "me",
-        userName: "aldiluqui",
-        stickers: []
-      },
-      other: {
-        userId: "sofi",
-        userName: "sofi",
-        stickers: [sticker("1", "COL1", 1, 1, true), sticker("2", "COL2", 1, 1, true)]
-      }
-    });
+  it("builds only balanced one-to-one suggestions", () => {
+    assert.deepEqual(buildOneToOneSuggestions(["URU4"], ["BRA5", "ARG12"]), [
+      { give: "URU4", receive: "BRA5" }
+    ]);
+  });
 
-    assert.deepEqual(analysis.canReceive, ["COL1", "COL2"]);
-    assert.equal(analysis.type, "PARTIAL");
-    assert.equal(analysis.pendingCountForOther, 2);
+  it("validates all one-to-one selections when there are multiple pairs", () => {
+    assert.equal(
+      isValidAllOneToOneSelection(
+        {
+          stickersGivenByMe: ["ARG12", "ESP7"],
+          stickersGivenByOther: ["BRA5", "FRA8"]
+        },
+        ["ARG12", "ESP7"],
+        ["BRA5", "FRA8", "GER9"]
+      ),
+      true
+    );
+    assert.equal(
+      isValidAllOneToOneSelection(
+        { stickersGivenByMe: ["ARG12"], stickersGivenByOther: ["BRA5"] },
+        ["ARG12", "ESP7"],
+        ["BRA5", "FRA8"]
+      ),
+      false
+    );
+  });
+
+  it("validates one-to-one selection against suggestions", () => {
+    assert.equal(
+      isValidOneToOneSelection(
+        { stickersGivenByMe: ["URU4"], stickersGivenByOther: ["BRA5"] },
+        ["URU4"],
+        ["BRA5", "ARG12"]
+      ),
+      true
+    );
+    assert.equal(
+      isValidOneToOneSelection(
+        { stickersGivenByMe: ["URU4"], stickersGivenByOther: ["ARG12"] },
+        ["URU4"],
+        ["BRA5", "ARG12"]
+      ),
+      false
+    );
   });
 
   it("returns NOT_AVAILABLE when there are no matches", () => {
-    const result = determineExchangeType([], [], status(), status(), "sofi");
+    const result = determineExchangeType([], [], "sofi");
 
     assert.equal(result.type, "NOT_AVAILABLE");
   });
 
-  it("analyzes Sofi partial exchange scenario", () => {
+  it("analyzes balanced exchange scenario", () => {
     const analysis = analyzeExchange({
       me: {
         userId: "me",
@@ -183,61 +163,36 @@ describe("ExchangeService", () => {
 
     assert.deepEqual(analysis.canReceive, ["BRA5", "ARG12"]);
     assert.deepEqual(analysis.canGive, ["URU4"]);
-    assert.equal(analysis.type, "PARTIAL");
-    assert.equal(analysis.pendingCountForMe, 0);
-    assert.equal(analysis.pendingCountForOther, 1);
+    assert.equal(analysis.type, "DIRECT");
+    assert.equal(analysis.suggestions.length, 1);
+    assert.deepEqual(analysis.suggestions[0], { give: "URU4", receive: "BRA5" });
   });
 
-  it("analyzes pending exchange when other has missing but no repeated", () => {
+  it("suggests one-to-one pairs when both sides can trade", () => {
     const analysis = analyzeExchange({
       me: {
         userId: "me",
         userName: "aldiluqui",
         stickers: [
           sticker("1", "ARG12", 1, 1, true),
-          sticker("2", "ESP7", 1, 1, true),
-          sticker("3", "CC3", 1, 1, true)
+          sticker("2", "ESP7", 1, 1, true)
         ]
       },
       other: {
         userId: "sofi",
         userName: "sofi",
         stickers: [
-          sticker("1", "ARG12", 0, 0, true),
-          sticker("2", "ESP7", 0, 0, true),
-          sticker("3", "CC3", 0, 0, true)
+          sticker("3", "BRA5", 1, 1, true),
+          sticker("4", "FRA8", 1, 1, true),
+          sticker("5", "ARG12", 0, 0, true),
+          sticker("6", "ESP7", 0, 0, true)
         ]
       }
     });
 
-    assert.equal(analysis.type, "PENDING");
-    assert.equal(analysis.canGive.length, 3);
-    assert.equal(analysis.canReceive.length, 0);
-    assert.equal(analysis.pendingCountForMe, 3);
-    assert.equal(analysis.suggestions.length, 3);
-    assert.deepEqual(
-      analysis.suggestions.map((suggestion) => suggestion.give),
-      ["ARG12", "ESP7", "CC3"]
-    );
-  });
-
-  it("suggests pending partial exchange when other has no album loaded", () => {
-    const analysis = analyzeExchange({
-      me: {
-        userId: "me",
-        userName: "aldiluqui",
-        stickers: [sticker("1", "ARG12", 1, 1, true), sticker("2", "ESP7", 1, 1, true)]
-      },
-      other: {
-        userId: "sofi",
-        userName: "sofi",
-        stickers: []
-      }
-    });
-
-    assert.equal(analysis.type, "PENDING");
-    assert.equal(analysis.canGive.length, 2);
+    assert.equal(analysis.type, "MULTIPLE");
     assert.equal(analysis.suggestions.length, 2);
+    assert.deepEqual(analysis.suggestions[0], { give: "ARG12", receive: "BRA5" });
   });
 });
 

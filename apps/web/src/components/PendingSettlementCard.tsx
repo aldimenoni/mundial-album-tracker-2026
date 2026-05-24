@@ -6,15 +6,13 @@ type PendingSettlementCardProps = {
   isFinalizing?: boolean;
   finalizingOptionKey?: string | null;
   onFinalizeOne?: (settlement: PendingSettlementDto, selection: ExchangeSelection, optionKey: string) => void;
-  onFinalizeAll?: (settlement: PendingSettlementDto, selection: ExchangeSelection) => void;
 };
 
 export function PendingSettlementCard({
   settlement,
   isFinalizing = false,
   finalizingOptionKey = null,
-  onFinalizeOne,
-  onFinalizeAll
+  onFinalizeOne
 }: PendingSettlementCardProps) {
   return (
     <section className="pending-settlement-card">
@@ -32,17 +30,10 @@ export function PendingSettlementCard({
         options={settlement.options}
         isBusy={isFinalizing}
         busyOptionKey={finalizingOptionKey}
-        confirmAllLabel="Intercambiar todas"
-        busyAllLabel="Intercambiando todas..."
         {...(onFinalizeOne
           ? {
               onConfirmOne: (selection, optionKey) =>
                 onFinalizeOne(settlement, selection, optionKey)
-            }
-          : {})}
-        {...(onFinalizeAll
-          ? {
-              onConfirmAll: (selection) => onFinalizeAll(settlement, selection)
             }
           : {})}
       />
