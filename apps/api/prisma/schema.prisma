@@ -8,12 +8,13 @@ datasource db {
 }
 
 model User {
-  id        String        @id @default(uuid())
-  name      String
-  email     String        @unique
-  stickers  UserSticker[]
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  id                 String              @id @default(uuid())
+  name               String              @unique
+  stickers           UserSticker[]
+  exchangesFrom      ExchangeProposal[]  @relation("ExchangesFrom")
+  exchangesTo        ExchangeProposal[]  @relation("ExchangesTo")
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
 }
 
 model Sticker {
@@ -52,4 +53,43 @@ enum StickerType {
   STANDARD
   COCA_COLA
   SPECIAL
+}
+
+enum ExchangeType {
+  DIRECT
+  MULTIPLE
+  PARTIAL
+  PENDING
+  INFO_INSUFFICIENT
+  NOT_AVAILABLE
+}
+
+enum ExchangeStatus {
+  DRAFT
+  PROPOSED
+  ACCEPTED
+  PENDING_SETTLEMENT
+  COMPLETED
+  CANCELLED
+}
+
+model ExchangeProposal {
+  id                   String         @id @default(uuid())
+  fromUserId           String
+  toUserId             String
+  status               ExchangeStatus @default(DRAFT)
+  type                 ExchangeType
+  stickersGivenByMe    String[]
+  stickersGivenByOther String[]
+  pendingCountForMe    Int            @default(0)
+  pendingCountForOther Int            @default(0)
+  notes                String?
+  fromUser             User           @relation("ExchangesFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser               User           @relation("ExchangesTo", fields: [toUserId], references: [id], onDelete: Cascade)
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+
+  @@index([fromUserId])
+  @@index([toUserId])
+  @@index([status])
 }

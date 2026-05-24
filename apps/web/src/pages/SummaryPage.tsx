@@ -4,6 +4,7 @@ import { api } from "../api/client";
 import { getErrorMessage } from "../api/error-message";
 import { AlbumSummaryCard } from "../components/AlbumSummaryCard";
 import { useRequiredUser } from "../state/user-store";
+import { subscribeAlbumUpdated } from "../utils/album-events";
 
 export function SummaryPage() {
   const currentUser = useRequiredUser();
@@ -27,12 +28,16 @@ export function SummaryPage() {
     }
 
     void loadSummary();
+
+    return subscribeAlbumUpdated(currentUser.id, () => {
+      void loadSummary();
+    });
   }, [currentUser.id]);
 
   return (
     <section className="stack">
       <div className="page-heading">
-        <p className="eyebrow">Estadisticas</p>
+        <p className="eyebrow">Home</p>
         <h2>Resumen</h2>
       </div>
 

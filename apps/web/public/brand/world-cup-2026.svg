@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Copa del Mundo FIFA">
+  <defs>
+    <linearGradient id="trophy-gold" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="#f7e08a"/>
+      <stop offset="45%" stop-color="#d4af37"/>
+      <stop offset="100%" stop-color="#9a7209"/>
+    </linearGradient>
+    <linearGradient id="trophy-base" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1a4fbf"/>
+      <stop offset="100%" stop-color="#003087"/>
+    </linearGradient>
+    <linearGradient id="trophy-plinth" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00a651"/>
+      <stop offset="100%" stop-color="#00843d"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="60" cy="108" rx="34" ry="5" fill="#0b1f4b" opacity="0.12"/>
+  <path d="M34 96h52c0 8-11.6 12-26 12S34 104 34 96z" fill="url(#trophy-plinth)"/>
+  <path d="M42 88h36l-3 8H45l-3-8z" fill="url(#trophy-base)"/>
+  <rect x="54" y="78" width="12" height="10" rx="1.5" fill="url(#trophy-gold)"/>
+  <path
+    d="M38 28c0-12 9.8-18 22-18s22 6 22 18l-2.5 30c-1.8 9.5-9.2 15-19.5 15s-17.7-5.5-19.5-15L38 28z"
+    fill="url(#trophy-gold)"
+  />
+  <path
+    d="M38 30c-11.5 1.5-16 10.5-12.5 19.5 2.8 7.2 9.5 8.8 14.5 6.5"
+    fill="none"
+    stroke="url(#trophy-gold)"
+    stroke-width="5.5"
+    stroke-linecap="round"
+  />
+  <path
+    d="M82 30c11.5 1.5 16 10.5 12.5 19.5-2.8 7.2-9.5 8.8-14.5 6.5"
+    fill="none"
+    stroke="url(#trophy-gold)"
+    stroke-width="5.5"
+    stroke-linecap="round"
+  />
+  <ellipse cx="60" cy="38" rx="14" ry="7" fill="none" stroke="#8b6914" stroke-width="1.4" opacity="0.55"/>
+  <path d="M46 38h28" stroke="#8b6914" stroke-width="1.2" opacity="0.45"/>
+  <path d="M60 31v14" stroke="#8b6914" stroke-width="1.2" opacity="0.45"/>
+  <circle cx="60" cy="24" r="3.5" fill="#f7e08a"/>
+</svg>

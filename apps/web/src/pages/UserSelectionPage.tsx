@@ -1,4 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
+import { UserPlus, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import type { UserDto } from "@mundial-album/shared";
 import { api } from "../api/client";
 import { getErrorMessage } from "../api/error-message";
@@ -6,11 +8,12 @@ import { useUser } from "../state/user-store";
 
 export function UserSelectionPage() {
   const { currentUser, setCurrentUser } = useUser();
+  const navigate = useNavigate();
   const [users, setUsers] = useState<UserDto[]>([]);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [nickname, setNickname] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   async function loadUsers(): Promise<void> {
@@ -31,16 +34,21 @@ export function UserSelectionPage() {
     void loadUsers();
   }, []);
 
+  function closeCreateForm(): void {
+    setShowCreateForm(false);
+    setNickname("");
+    setErrorMessage(null);
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
     setIsSubmitting(true);
     setErrorMessage(null);
 
     try {
-      const user = await api.createUser({ name, email });
-      setCurrentUser(user);
-      setName("");
-      setEmail("");
+      await api.createUser({ name: nickname });
+      setNickname("");
+      setShowCreateForm(false);
       await loadUsers();
     } catch (error: unknown) {
       setErrorMessage(getErrorMessage(error));
@@ -50,56 +58,93 @@ export function UserSelectionPage() {
   }
 
   return (
-    <div className="two-column">
-      <section className="work-panel">
-        <div className="page-heading">
-          <p className="eyebrow">Usuario activo</p>
-          <h2>{currentUser ? currentUser.name : "Crear usuario"}</h2>
-          <p>{currentUser ? currentUser.email : "Cada usuario tiene su álbum personal."}</p>
+    <section className="work-panel user-selection-panel">
+      <div className="page-heading page-heading-toolbar">
+        <div>
+          <p className="eyebrow">Acceso</p>
+          <h2>Usuarios</h2>
+          <p>Elegí un usuario para ingresar a tu álbum.</p>
         </div>
+        {!showCreateForm ? (
+          <button
+            className="icon-button"
+            type="button"
+            aria-label="Crear usuario"
+            title="Crear usuario"
+            onClick={() => setShowCreateForm(true)}
+          >
+            <UserPlus size={20} aria-hidden="true" />
+          </button>
+        ) : null}
+      </div>
 
-        {errorMessage ? <p className="alert">{errorMessage}</p> : null}
+      {errorMessage ? <p className="alert">{errorMessage}</p> : null}
 
-        <form className="form-grid" onSubmit={(event) => void handleSubmit(event)}>
+      {showCreateForm ? (
+        <form className="form-grid create-user-form" onSubmit={(event) => void handleSubmit(event)}>
+          <div className="form-grid-header">
+            <h3>Nuevo usuario</h3>
+            <button
+              className="icon-button icon-button-ghost"
+              type="button"
+              aria-label="Cerrar formulario"
+              onClick={closeCreateForm}
+            >
+              <X size={18} aria-hidden="true" />
+            </button>
+          </div>
           <label className="field">
-            <span>Nombre</span>
-            <input value={name} onChange={(event) => setName(event.currentTarget.value)} />
-          </label>
-          <label className="field">
-            <span>Email</span>
+            <span>Nickname</span>
             <input
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.currentTarget.value)}
+              value={nickname}
+              autoComplete="username"
+              autoFocus
+              placeholder="aldimenoni"
+              onChange={(event) => setNickname(event.currentTarget.value)}
             />
           </label>
-          <button className="primary-button" type="submit" disabled={isSubmitting}>
-            Crear usuario
-          </button>
-        </form>
-      </section>
-
-      <section className="work-panel">
-        <div className="page-heading">
-          <p className="eyebrow">Usuarios</p>
-          <h2>Seleccionar</h2>
-        </div>
-
-        {isLoading ? <p className="empty-state">Cargando usuarios...</p> : null}
-        <div className="user-list">
-          {users.map((user) => (
-            <button
-              key={user.id}
-              className={currentUser?.id === user.id ? "selected-list-button" : "list-button"}
-              type="button"
-              onClick={() => setCurrentUser(user)}
-            >
-              <strong>{user.name}</strong>
-              <span>{user.email}</span>
+          <div className="form-actions">
+            <button className="ghost-button" type="button" onClick={closeCreateForm}>
+              Cancelar
             </button>
-          ))}
-        </div>
-      </section>
-    </div>
+            <button className="primary-button" type="submit" disabled={isSubmitting}>
+              Crear usuario
+            </button>
+          </div>
+        </form>
+      ) : null}
+
+      {isLoading ? <p className="empty-state">Cargando usuarios...</p> : null}
+
+      {!isLoading && users.length === 0 ? (
+        <p className="empty-state">Todavía no hay usuarios. Creá el primero con el botón +.</p>
+      ) : null}
+
+      <div className="user-list">
+        {users.map((user) => {
+          const isActive = currentUser?.id === user.id;
+
+          return (
+            <div
+              key={user.id}
+              className={isActive ? "user-list-item is-active" : "user-list-item"}
+            >
+              <strong>@{user.name}</strong>
+              <button
+                className={isActive ? "ghost-button" : "primary-button"}
+                type="button"
+                disabled={isActive}
+                onClick={() => {
+                  setCurrentUser(user);
+                  navigate("/");
+                }}
+              >
+                {isActive ? "Activo" : "Ingresar"}
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    </section>
   );
 }

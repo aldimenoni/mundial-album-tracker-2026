@@ -1,13 +1,15 @@
 export const STICKER_TYPES = ["STANDARD", "COCA_COLA", "SPECIAL"] as const;
 export type StickerType = (typeof STICKER_TYPES)[number];
 
+import type { CompareAlbumUserStatus } from "./compare.js";
+import type { ExchangeStatus, ExchangeType } from "./exchange.js";
+
 export const ALBUM_STATUSES = ["missing", "owned", "repeated"] as const;
 export type AlbumStickerStatus = (typeof ALBUM_STATUSES)[number];
 
 export interface UserDto {
   id: string;
   name: string;
-  email: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -49,9 +51,15 @@ export interface AlbumSummaryDto {
   repeatedCocaCola: number;
 }
 
+export interface ExecuteExchangeResultDto {
+  proposal: import("./exchange.js").ExchangeProposalDto;
+  fromUserSummary: AlbumSummaryDto;
+  toUserSummary: AlbumSummaryDto;
+  message: string;
+}
+
 export interface CreateUserPayload {
   name: string;
-  email: string;
 }
 
 export interface UpdateUserStickerPayload {
@@ -61,19 +69,71 @@ export interface UpdateUserStickerPayload {
 }
 
 export interface TradeSuggestionDto {
-  receive: StickerDto;
-  give: StickerDto;
+  receive: StickerDto | null;
+  give: StickerDto | null;
 }
 
 export interface CompareAlbumDto {
   myUser: UserDto;
   otherUser: UserDto;
-  theyCanGive: StickerDto[];
-  iCanGive: StickerDto[];
+  type: ExchangeType;
+  canGive: StickerDto[];
+  canReceive: StickerDto[];
+  myRepeatedStickers: StickerDto[];
+  otherRepeatedStickers: StickerDto[];
+  pendingCountForMe: number;
+  pendingCountForOther: number;
+  message: string;
   suggestions: TradeSuggestionDto[];
+  myStatus: CompareAlbumUserStatus;
+  otherStatus: CompareAlbumUserStatus;
 }
 
 export interface ApiErrorResponse {
   message: string;
   issues?: unknown;
 }
+
+export {
+  albumHasMissingTrackedData,
+  albumHasRepeatedStickers,
+  albumHasTrackedData,
+  buildAlbumUserStatus,
+  resolveAlbumStatus,
+  type CompareAlbumUserStatus
+} from "./compare.js";
+export {
+  EXCHANGE_STATUSES,
+  EXCHANGE_STATUS_LABELS,
+  EXCHANGE_TYPES,
+  EXCHANGE_TYPE_LABELS,
+  type CreateExchangePayload,
+  type ExchangeAnalysisDto,
+  type ExchangeProposalDto,
+  type ExchangeStatus,
+  type ExchangeType,
+  type FinalizeExchangePayload,
+  type PendingSettlementDto,
+  type SettlementOptionDto
+} from "./exchange.js";
+export {
+  ALBUM_SPREADS,
+  getAlbumSpreadFilterGroups,
+  getAlbumSpreadFilterOptions,
+  getAlbumTeamNames,
+  getSpreadFilterValue,
+  getSpreadStickers,
+  getSpreadSummary,
+  HISTORY_1_FILTER_LABEL,
+  HISTORY_2_FILTER_LABEL,
+  INTRO_SPREAD_FILTER_LABEL,
+  type AlbumSpreadDefinition,
+  type AlbumSpreadFilterGroups
+} from "./album-pages.js";
+export {
+  getFlagSrc,
+  getSpreadVisualTheme,
+  getTeamTheme,
+  type SpreadVisualTheme,
+  type TeamTheme
+} from "./team-themes.js";

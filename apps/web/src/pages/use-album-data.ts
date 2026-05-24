@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { AlbumDto, UpdateUserStickerPayload } from "@mundial-album/shared";
 import { api } from "../api/client";
 import { getErrorMessage } from "../api/error-message";
+import { subscribeAlbumUpdated } from "../utils/album-events";
 
 export function useAlbumData(userId: string) {
   const [album, setAlbum] = useState<AlbumDto | null>(null);
@@ -25,6 +26,8 @@ export function useAlbumData(userId: string) {
   useEffect(() => {
     void loadAlbum();
   }, [loadAlbum]);
+
+  useEffect(() => subscribeAlbumUpdated(userId, () => void loadAlbum()), [userId, loadAlbum]);
 
   const updateSticker = useCallback(
     async (stickerId: string, payload: UpdateUserStickerPayload) => {

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Coca-Cola">
+  <circle cx="60" cy="60" r="56" fill="#f40009"/>
+  <text
+    x="60"
+    y="66"
+    text-anchor="middle"
+    font-family="'Snell Roundhand', 'Brush Script MT', 'Segoe Script', cursive"
+    font-size="21"
+    fill="#ffffff"
+  >
+    Coca-Cola
+  </text>
+</svg>

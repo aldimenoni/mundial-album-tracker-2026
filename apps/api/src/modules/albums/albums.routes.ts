@@ -7,11 +7,11 @@ import {
   userIdParamSchema
 } from "./albums.schemas.js";
 import {
-  compareAlbums,
   getAlbum,
   getAlbumSummary,
   updateAlbumSticker
 } from "./albums.service.js";
+import { compareAlbums } from "./compare-albums.js";
 
 export const albumsRouter = Router();
 

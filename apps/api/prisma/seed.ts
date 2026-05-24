@@ -2,6 +2,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { PrismaClient, StickerType, type Prisma } from "@prisma/client";
 import { config } from "dotenv";
+import { playerNameForTeamSticker } from "./player-rosters.js";
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 
@@ -103,18 +104,6 @@ const cocaColaPlayers = [
   "Gabriel Magalhaes"
 ];
 
-function teamStickerName(teamName: string, number: number): string | null {
-  if (number === 1) {
-    return "Escudo";
-  }
-
-  if (number === 13) {
-    return "Foto del equipo";
-  }
-
-  return `Jugador ${teamName} ${number}`;
-}
-
 function buildStickerSeed(): Prisma.StickerCreateManyInput[] {
   let orderIndex = 1;
   const stickers: Prisma.StickerCreateManyInput[] = [
@@ -148,7 +137,7 @@ function buildStickerSeed(): Prisma.StickerCreateManyInput[] {
         code: `${team.code}${number}`,
         number,
         team: team.name,
-        playerName: teamStickerName(team.name, number),
+        playerName: playerNameForTeamSticker(team.code, number),
         type: StickerType.STANDARD,
         section: team.name,
         orderIndex: orderIndex++

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 72" role="img" aria-label="Panini">
+  <rect width="240" height="72" rx="12" fill="#ffffff"/>
+  <text x="120" y="46" text-anchor="middle" font-family="Montserrat, Arial, sans-serif" font-size="34" font-weight="800" fill="#e31837" letter-spacing="2">PANINI</text>
+  <circle cx="34" cy="36" r="10" fill="#003087"/>
+  <circle cx="206" cy="36" r="10" fill="#00a651"/>
+</svg>

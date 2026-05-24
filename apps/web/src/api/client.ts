@@ -3,7 +3,11 @@ import type {
   AlbumSummaryDto,
   ApiErrorResponse,
   CompareAlbumDto,
+  CreateExchangePayload,
   CreateUserPayload,
+  ExecuteExchangeResultDto,
+  ExchangeProposalDto,
+  PendingSettlementDto,
   StickerDto,
   UpdateUserStickerPayload,
   UserDto,
@@ -106,5 +110,42 @@ export const api = {
 
   compareAlbums(myUserId: string, otherUserId: string): Promise<CompareAlbumDto> {
     return request<CompareAlbumDto>(`/albums/${myUserId}/compare/${otherUserId}`);
+  },
+
+  createExchange(payload: CreateExchangePayload): Promise<ExchangeProposalDto> {
+    return request<ExchangeProposalDto>("/exchanges", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+  },
+
+  executeExchange(payload: CreateExchangePayload): Promise<ExecuteExchangeResultDto> {
+    return request<ExecuteExchangeResultDto>("/exchanges/execute", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+  },
+
+  listPendingSettlements(userId: string): Promise<PendingSettlementDto[]> {
+    return request<PendingSettlementDto[]>(`/exchanges/pending/${userId}`);
+  },
+
+  finalizeExchange(
+    proposalId: string,
+    userId: string,
+    selection?: Pick<CreateExchangePayload, "stickersGivenByMe" | "stickersGivenByOther">
+  ): Promise<ExecuteExchangeResultDto> {
+    return request<ExecuteExchangeResultDto>(`/exchanges/${proposalId}/finalize`, {
+      method: "POST",
+      body: JSON.stringify({
+        userId,
+        ...(selection?.stickersGivenByMe?.length
+          ? { stickersGivenByMe: selection.stickersGivenByMe }
+          : {}),
+        ...(selection?.stickersGivenByOther?.length
+          ? { stickersGivenByOther: selection.stickersGivenByOther }
+          : {})
+      })
+    });
   }
 };

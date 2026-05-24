@@ -5,11 +5,16 @@
   "type": "module",
   "scripts": {
     "build": "prisma generate && tsc -p tsconfig.json",
-    "dev": "prisma generate && tsx watch --exclude ../../node_modules/** --exclude node_modules/** src/server.ts",
+    "dev": "prisma generate && tsx watch src/server.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "seed": "prisma db seed",
+    "seed:exchange-demo": "tsx prisma/seed-exchange-demo.ts",
+    "seed:exchange-many-demo": "tsx prisma/seed-exchange-many-demo.ts",
+    "seed:exchange-partial-demo": "tsx prisma/seed-exchange-partial-demo.ts",
+    "cleanup:test-users": "tsx prisma/cleanup-test-users.ts",
     "start": "node dist/server.js",
+    "test": "tsx --test src/modules/exchanges/*.test.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

@@ -1,5 +1,5 @@
-import type { UpdateUserStickerPayload, UserStickerDto } from "@mundial-album/shared";
-import { Check, CopyPlus, Minus, Plus, X } from "lucide-react";
+import type { StickerType, UpdateUserStickerPayload, UserStickerDto } from "@mundial-album/shared";
+import { Check, CopyPlus, Minus, Plus, Star, X } from "lucide-react";
 import { useState } from "react";
 import { StatusBadge } from "./StatusBadge";
 
@@ -9,6 +9,25 @@ type StickerCardProps = {
   compact?: boolean;
   onUpdate?: ((stickerId: string, payload: UpdateUserStickerPayload) => Promise<void>) | undefined;
 };
+
+function StickerTypeIcon({ type }: { type: StickerType }) {
+  if (type === "SPECIAL") {
+    return <Star size={15} className="sticker-type-icon sticker-type-icon-special" aria-label="Especial" />;
+  }
+
+  if (type === "COCA_COLA") {
+    return (
+      <img
+        src="/brand/coca-cola-mark.svg"
+        alt=""
+        className="sticker-type-icon sticker-type-icon-coca"
+        aria-label="Coca-Cola"
+      />
+    );
+  }
+
+  return null;
+}
 
 export function StickerCard({ item, editable = false, compact = false, onUpdate }: StickerCardProps) {
   const [isSaving, setIsSaving] = useState(false);
@@ -31,24 +50,20 @@ export function StickerCard({ item, editable = false, compact = false, onUpdate 
 
   return (
     <article className={`sticker-card ${compact ? "sticker-card-compact" : ""}`}>
-      <div className="sticker-card-header">
-        <div>
-          <strong>{item.sticker.code}</strong>
-          <span>{item.sticker.section ?? "Album"}</span>
-        </div>
+      <div className="sticker-card-status">
         <StatusBadge status={item.status} />
       </div>
 
-      <div className="sticker-card-body">
-        <p>{item.sticker.playerName ?? "Sin nombre"}</p>
-        <small>
-          #{item.sticker.number ?? "-"} · {item.sticker.type.replace("_", " ")}
-        </small>
+      <div className="sticker-card-header">
+        <strong>{item.sticker.code}</strong>
+        <span>{item.sticker.section ?? "Album"}</span>
       </div>
 
-      <div className="sticker-counts">
-        <span>Propias: {item.quantityOwned}</span>
-        <span>Repetidas: {item.quantityRepeated}</span>
+      <div className="sticker-card-body">
+        <p>
+          {item.sticker.playerName ?? "Sin nombre"}
+          <StickerTypeIcon type={item.sticker.type} />
+        </p>
       </div>
 
       {editable ? (
@@ -73,13 +88,13 @@ export function StickerCard({ item, editable = false, compact = false, onUpdate 
           </button>
           <button
             type="button"
-            title="Marcar repetida"
+            title="Sumar repetida"
             disabled={isSaving}
             onClick={() =>
               void handleUpdate({
                 status: "repeated",
                 quantityOwned: Math.max(item.quantityOwned, 1),
-                quantityRepeated: Math.max(item.quantityRepeated, 1)
+                quantityRepeated: repeatedQuantity + 1
               })
             }
           >
@@ -100,7 +115,7 @@ export function StickerCard({ item, editable = false, compact = false, onUpdate 
                 );
               }}
             >
-              <Minus size={15} aria-hidden="true" />
+              <Minus size={14} aria-hidden="true" />
             </button>
             <input
               aria-label="Cantidad repetida"
@@ -128,7 +143,7 @@ export function StickerCard({ item, editable = false, compact = false, onUpdate 
                 })
               }
             >
-              <Plus size={15} aria-hidden="true" />
+              <Plus size={14} aria-hidden="true" />
             </button>
           </div>
         </div>

@@ -1,34 +1,23 @@
 import type { ReactNode } from "react";
 import {
   Album,
-  BarChart3,
   Home,
-  ListOrdered,
+  LogOut,
   Repeat2,
-  Search,
-  Shield,
   UserRound
 } from "lucide-react";
-import { NavLink, Navigate, Route, Routes } from "react-router-dom";
-import { CompareTradePage } from "./pages/CompareTradePage";
-import { ExploreAlbumsPage } from "./pages/ExploreAlbumsPage";
+import { NavLink, Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import { HomePage } from "./pages/HomePage";
-import { LoadByOrderPage } from "./pages/LoadByOrderPage";
-import { LoadByTeamPage } from "./pages/LoadByTeamPage";
 import { MyAlbumPage } from "./pages/MyAlbumPage";
 import { SummaryPage } from "./pages/SummaryPage";
 import { UserSelectionPage } from "./pages/UserSelectionPage";
 import { useUser } from "./state/user-store";
 
 const navigationItems = [
-  { to: "/", label: "Home", icon: Home },
-  { to: "/usuarios", label: "Usuario", icon: UserRound },
-  { to: "/mi-album", label: "Mi album", icon: Album },
-  { to: "/cargar-orden", label: "Por orden", icon: ListOrdered },
-  { to: "/cargar-equipo", label: "Por equipo", icon: Shield },
-  { to: "/resumen", label: "Resumen", icon: BarChart3 },
-  { to: "/explorar", label: "Explorar", icon: Search },
-  { to: "/comparar", label: "Intercambiar", icon: Repeat2 }
+  { to: "/", label: "Home", shortLabel: "Home", icon: Home },
+  { to: "/usuarios", label: "Usuario", shortLabel: "Usuario", icon: UserRound },
+  { to: "/mi-album", label: "Mi album", shortLabel: "Album", icon: Album },
+  { to: "/intercambio", label: "Intercambio", shortLabel: "Cambio", icon: Repeat2 }
 ] as const;
 
 function RequireUser({ children }: { children: ReactNode }) {
@@ -36,43 +25,70 @@ function RequireUser({ children }: { children: ReactNode }) {
   return currentUser ? <>{children}</> : <Navigate to="/usuarios" replace />;
 }
 
+function GuestOnly({ children }: { children: ReactNode }) {
+  const { currentUser } = useUser();
+  return currentUser ? <Navigate to="/" replace /> : <>{children}</>;
+}
+
+function DefaultRoute() {
+  const { currentUser } = useUser();
+  return currentUser ? <SummaryPage /> : <Navigate to="/usuarios" replace />;
+}
+
 export function App() {
   const { currentUser, setCurrentUser } = useUser();
+  const navigate = useNavigate();
+
+  const visibleNavigationItems = currentUser
+    ? navigationItems.filter((item) => item.to !== "/usuarios")
+    : navigationItems.filter((item) => item.to === "/usuarios");
+
+  function handleSignOut(): void {
+    setCurrentUser(null);
+    navigate("/usuarios");
+  }
 
   return (
     <div className="app-shell">
       <header className="topbar">
-        <div>
-          <p className="eyebrow">Mundial 2026</p>
-          <h1>Mundial Album Tracker</h1>
+        <div className="brand-lockup">
+          <img
+            className="brand-emblem"
+            src="/brand/world-cup-2026.svg"
+            alt="Copa del Mundo FIFA"
+          />
+          <div className="brand-copy">
+            <p className="eyebrow">FIFA World Cup 2026</p>
+            <h1>Album Tracker</h1>
+          </div>
         </div>
         <div className="active-user">
-          <span>{currentUser ? currentUser.name : "Sin usuario"}</span>
+          {currentUser ? <span>@{currentUser.name}</span> : null}
           {currentUser ? (
-            <button className="ghost-button" type="button" onClick={() => setCurrentUser(null)}>
-              Cambiar
+            <button
+              className="icon-button icon-button-ghost"
+              type="button"
+              aria-label="Salir"
+              title="Salir"
+              onClick={handleSignOut}
+            >
+              <LogOut size={18} aria-hidden="true" />
             </button>
           ) : null}
         </div>
       </header>
 
-      <nav className="nav-tabs" aria-label="Navegacion principal">
-        {navigationItems.map((item) => {
-          const Icon = item.icon;
-
-          return (
-            <NavLink key={item.to} to={item.to} title={item.label}>
-              <Icon size={18} aria-hidden="true" />
-              <span>{item.label}</span>
-            </NavLink>
-          );
-        })}
-      </nav>
-
       <main className="page-shell">
         <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/usuarios" element={<UserSelectionPage />} />
+          <Route path="/" element={<DefaultRoute />} />
+          <Route
+            path="/usuarios"
+            element={
+              <GuestOnly>
+                <UserSelectionPage />
+              </GuestOnly>
+            }
+          />
           <Route
             path="/mi-album"
             element={
@@ -82,47 +98,30 @@ export function App() {
             }
           />
           <Route
-            path="/cargar-orden"
+            path="/intercambio"
             element={
               <RequireUser>
-                <LoadByOrderPage />
+                <HomePage />
               </RequireUser>
             }
           />
-          <Route
-            path="/cargar-equipo"
-            element={
-              <RequireUser>
-                <LoadByTeamPage />
-              </RequireUser>
-            }
-          />
-          <Route
-            path="/resumen"
-            element={
-              <RequireUser>
-                <SummaryPage />
-              </RequireUser>
-            }
-          />
-          <Route
-            path="/explorar"
-            element={
-              <RequireUser>
-                <ExploreAlbumsPage />
-              </RequireUser>
-            }
-          />
-          <Route
-            path="/comparar"
-            element={
-              <RequireUser>
-                <CompareTradePage />
-              </RequireUser>
-            }
-          />
+          <Route path="/resumen" element={<Navigate to="/" replace />} />
+          <Route path="/comparar" element={<Navigate to="/intercambio" replace />} />
         </Routes>
       </main>
+
+      <nav className="bottom-nav" aria-label="Navegacion principal">
+        {visibleNavigationItems.map((item) => {
+          const Icon = item.icon;
+
+          return (
+            <NavLink key={item.to} to={item.to} title={item.label}>
+              <Icon size={22} aria-hidden="true" />
+              <span>{item.shortLabel}</span>
+            </NavLink>
+          );
+        })}
+      </nav>
     </div>
   );
 }

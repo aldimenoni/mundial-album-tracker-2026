@@ -1,10 +1,4 @@
-import type {
-  AlbumDto,
-  AlbumSummaryDto,
-  CompareAlbumDto,
-  StickerDto,
-  TradeSuggestionDto
-} from "@mundial-album/shared";
+import type { AlbumDto, AlbumSummaryDto } from "@mundial-album/shared";
 import type { UserSticker } from "@prisma/client";
 import { prisma } from "../../config/prisma.js";
 import { toUserDto, toUserStickerDto } from "../../utils/dto.js";
@@ -50,21 +44,6 @@ function normalizeStickerUpdate(
   };
 }
 
-function buildSuggestions(theyCanGive: StickerDto[], iCanGive: StickerDto[]): TradeSuggestionDto[] {
-  const suggestionCount = Math.min(theyCanGive.length, iCanGive.length);
-  const suggestions: TradeSuggestionDto[] = [];
-
-  for (let index = 0; index < suggestionCount; index += 1) {
-    const receive = theyCanGive[index];
-    const give = iCanGive[index];
-
-    if (receive && give) {
-      suggestions.push({ receive, give });
-    }
-  }
-
-  return suggestions;
-}
 
 export async function getAlbum(userId: string): Promise<AlbumDto> {
   const [user, stickers, userStickers] = await prisma.$transaction([
@@ -166,42 +145,5 @@ export async function getAlbumSummary(userId: string): Promise<AlbumSummaryDto> 
     totalCocaCola,
     missingCocaCola,
     repeatedCocaCola
-  };
-}
-
-export async function compareAlbums(
-  myUserId: string,
-  otherUserId: string
-): Promise<CompareAlbumDto> {
-  if (myUserId === otherUserId) {
-    throw new HttpError(400, "Choose two different users to compare albums");
-  }
-
-  const [myAlbum, otherAlbum] = await Promise.all([getAlbum(myUserId), getAlbum(otherUserId)]);
-  const otherByStickerId = new Map(
-    otherAlbum.stickers.map((item) => [item.stickerId, item])
-  );
-  const mineByStickerId = new Map(myAlbum.stickers.map((item) => [item.stickerId, item]));
-
-  const theyCanGive = myAlbum.stickers
-    .filter((mySticker) => {
-      const otherSticker = otherByStickerId.get(mySticker.stickerId);
-      return mySticker.quantityOwned === 0 && (otherSticker?.quantityRepeated ?? 0) > 0;
-    })
-    .map((item) => item.sticker);
-
-  const iCanGive = otherAlbum.stickers
-    .filter((otherSticker) => {
-      const mySticker = mineByStickerId.get(otherSticker.stickerId);
-      return otherSticker.quantityOwned === 0 && (mySticker?.quantityRepeated ?? 0) > 0;
-    })
-    .map((item) => item.sticker);
-
-  return {
-    myUser: myAlbum.user,
-    otherUser: otherAlbum.user,
-    theyCanGive,
-    iCanGive,
-    suggestions: buildSuggestions(theyCanGive, iCanGive)
   };
 }
