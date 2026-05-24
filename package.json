@@ -1,0 +1,26 @@
+{
+  "name": "mundial-album-tracker-2026",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @mundial-album/shared && npm run build -w @mundial-album/api && npm run build -w @mundial-album/web",
+    "dev": "npm run build -w @mundial-album/shared && concurrently \"npm run dev:api\" \"npm run dev:web\"",
+    "dev:api": "dotenv -e .env -- npm run dev -w @mundial-album/api",
+    "dev:web": "dotenv -e .env -- npm run dev -w @mundial-album/web",
+    "format": "prettier --write .",
+    "prisma:generate": "npm run prisma:generate -w @mundial-album/api",
+    "prisma:migrate": "dotenv -e .env -- npm run prisma:migrate -w @mundial-album/api",
+    "seed": "dotenv -e .env -- npm run seed -w @mundial-album/api",
+    "typecheck": "npm run build -w @mundial-album/shared && npm run typecheck -w @mundial-album/api && npm run typecheck -w @mundial-album/web"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "dotenv-cli": "^10.0.0",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.3"
+  }
+}

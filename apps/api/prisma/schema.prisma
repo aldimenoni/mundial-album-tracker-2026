@@ -1,0 +1,55 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String        @id @default(uuid())
+  name      String
+  email     String        @unique
+  stickers  UserSticker[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model Sticker {
+  id         String        @id @default(uuid())
+  code       String        @unique
+  number     Int?
+  team       String?
+  playerName String?
+  type       StickerType   @default(STANDARD)
+  section    String?
+  orderIndex Int
+  users      UserSticker[]
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@index([orderIndex])
+  @@index([team])
+  @@index([type])
+}
+
+model UserSticker {
+  id               String   @id @default(uuid())
+  userId           String
+  stickerId        String
+  quantityOwned    Int      @default(0)
+  quantityRepeated Int      @default(0)
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sticker          Sticker  @relation(fields: [stickerId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, stickerId])
+  @@index([userId])
+  @@index([stickerId])
+}
+
+enum StickerType {
+  STANDARD
+  COCA_COLA
+  SPECIAL
+}
