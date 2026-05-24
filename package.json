@@ -9,6 +9,7 @@
   "scripts": {
     "build": "npm run build -w @mundial-album/shared && npm run build -w @mundial-album/api && npm run build -w @mundial-album/web",
     "build:render": "npm run build -w @mundial-album/shared && npm run build -w @mundial-album/api",
+    "build:vercel": "npm run build -w @mundial-album/shared && npm run build -w @mundial-album/web",
     "dev": "npm run build -w @mundial-album/shared && concurrently \"npm run dev:api\" \"npm run dev:web\"",
     "dev:api": "dotenv -e .env -- npm run dev -w @mundial-album/api",
     "dev:web": "dotenv -e .env -- npm run dev -w @mundial-album/web",
