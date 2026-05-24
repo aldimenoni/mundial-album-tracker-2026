@@ -107,6 +107,7 @@ export {
   EXCHANGE_STATUS_LABELS,
   EXCHANGE_TYPES,
   EXCHANGE_TYPE_LABELS,
+  buildExchangeBalancePreview,
   type CreateExchangePayload,
   type ExchangeAnalysisDto,
   type ExchangeProposalDto,

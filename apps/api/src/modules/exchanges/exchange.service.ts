@@ -1,4 +1,5 @@
 import type { CompareAlbumUserStatus, ExchangeAnalysisDto } from "@mundial-album/shared";
+import { buildExchangeBalancePreview } from "@mundial-album/shared";
 import { buildSettlementSteps } from "./pending-settlement.js";
 
 export type ExchangePairSuggestion = {
@@ -86,22 +87,22 @@ function buildSuggestions(
 
 function buildPartialMessage(
   otherName: string,
+  canGiveCount: number,
+  canReceiveCount: number,
   pendingCountForMe: number,
   pendingCountForOther: number
 ): string {
-  if (pendingCountForMe > 0) {
-    return `@${otherName} te debería ${pendingCountForMe} figurita${pendingCountForMe === 1 ? "" : "s"} pendiente${pendingCountForMe === 1 ? "" : "s"}.`;
-  }
-
-  if (pendingCountForOther > 0) {
-    return `Te quedan ${pendingCountForOther} figurita${pendingCountForOther === 1 ? "" : "s"} pendiente${pendingCountForOther === 1 ? "" : "s"} a favor de @${otherName}.`;
-  }
-
-  return "Intercambio parcial sugerido.";
+  return buildExchangeBalancePreview({
+    otherUserName: otherName,
+    giveCount: canGiveCount,
+    receiveCount: canReceiveCount,
+    pendingCountForMe,
+    pendingCountForOther
+  });
 }
 
-function buildPendingMessage(otherName: string, pendingCountForMe: number): string {
-  return `Podés darle ${pendingCountForMe} repetida${pendingCountForMe === 1 ? "" : "s"} porque no ${pendingCountForMe === 1 ? "la tiene" : "las tiene"}. Como @${otherName} todavía no cargó repetidas, queda saldo pendiente a tu favor.`;
+function buildPendingMessage(otherName: string, canGiveCount: number): string {
+  return `Podés darle ${canGiveCount} repetida${canGiveCount === 1 ? "" : "s"} porque no ${canGiveCount === 1 ? "la tiene" : "las tiene"}. Das ${canGiveCount} y no recibís ahora; quedarían ${canGiveCount} ${canGiveCount === 1 ? "figurita" : "figuritas"} a tu favor con @${otherName}.`;
 }
 
 function buildExchangeAlbumStatus(stickers: ExchangeStickerState[]): CompareAlbumUserStatus {
@@ -147,7 +148,13 @@ export function determineExchangeType(
       type: "PARTIAL",
       pendingCountForMe,
       pendingCountForOther,
-      message: buildPartialMessage(otherName, pendingCountForMe, pendingCountForOther)
+      message: buildPartialMessage(
+        otherName,
+        canGive.length,
+        canReceive.length,
+        pendingCountForMe,
+        pendingCountForOther
+      )
     };
   }
 

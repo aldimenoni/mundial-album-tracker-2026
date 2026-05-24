@@ -92,3 +92,27 @@ export const EXCHANGE_STATUS_LABELS: Record<ExchangeStatus, string> = {
   COMPLETED: "Completado",
   CANCELLED: "Cancelado"
 };
+
+function stickerWord(count: number): string {
+  return `figurita${count === 1 ? "" : "s"}`;
+}
+
+export function buildExchangeBalancePreview(input: {
+  otherUserName: string;
+  giveCount: number;
+  receiveCount: number;
+  pendingCountForMe: number;
+  pendingCountForOther: number;
+}): string {
+  const { otherUserName, giveCount, receiveCount, pendingCountForMe, pendingCountForOther } = input;
+
+  if (pendingCountForMe > 0 && receiveCount === 0) {
+    return `Das ${giveCount} y no recibís ahora. Quedarían ${pendingCountForMe} ${stickerWord(pendingCountForMe)} a tu favor con @${otherUserName}.`;
+  }
+
+  if (pendingCountForMe > 0) {
+    return `Das ${giveCount} y recibís ${receiveCount}. @${otherUserName} te quedaría debiendo ${pendingCountForMe} ${stickerWord(pendingCountForMe)}.`;
+  }
+
+  return `Das ${giveCount} y recibís ${receiveCount}. Te quedarían ${pendingCountForOther} ${stickerWord(pendingCountForOther)} a favor de @${otherUserName}.`;
+}

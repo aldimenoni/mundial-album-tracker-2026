@@ -1,5 +1,5 @@
 import type { CompareAlbumDto } from "@mundial-album/shared";
-import { EXCHANGE_TYPE_LABELS } from "@mundial-album/shared";
+import { EXCHANGE_TYPE_LABELS, buildExchangeBalancePreview } from "@mundial-album/shared";
 import { CustomExchangePanel } from "./CustomExchangePanel";
 import {
   ExchangeOptionList,
@@ -63,9 +63,13 @@ export function CompareResult({
         <>
           {result.pendingCountForMe > 0 || result.pendingCountForOther > 0 ? (
             <div className="exchange-balance-banner">
-              {result.pendingCountForMe > 0
-                ? `@${result.otherUser.name} te debería ${result.pendingCountForMe} figurita${result.pendingCountForMe === 1 ? "" : "s"} pendiente${result.pendingCountForMe === 1 ? "" : "s"}.`
-                : `Te quedan ${result.pendingCountForOther} figurita${result.pendingCountForOther === 1 ? "" : "s"} pendiente${result.pendingCountForOther === 1 ? "" : "s"} a favor de @${result.otherUser.name}.`}
+              {buildExchangeBalancePreview({
+                otherUserName: result.otherUser.name,
+                giveCount,
+                receiveCount,
+                pendingCountForMe: result.pendingCountForMe,
+                pendingCountForOther: result.pendingCountForOther
+              })}
             </div>
           ) : null}
 

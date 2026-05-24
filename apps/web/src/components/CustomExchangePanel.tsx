@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import type { StickerDto } from "@mundial-album/shared";
+import { buildExchangeBalancePreview } from "@mundial-album/shared";
 import { Loader2 } from "lucide-react";
 import type { ExchangeSelection } from "./ExchangeOptionList";
 
@@ -155,15 +156,19 @@ export function CustomExchangePanel({
 
         {canConfirm ? (
           <div className="custom-exchange-preview">
-            {pendingForMe > 0 ? (
-              <span>@{otherUserName} te quedaría debiendo {pendingForMe}.</span>
-            ) : null}
-            {pendingForOther > 0 ? (
-              <span>Te quedarían {pendingForOther} a favor de @{otherUserName}.</span>
-            ) : null}
-            {pendingForMe === 0 && pendingForOther === 0 ? (
+            {pendingForMe > 0 || pendingForOther > 0 ? (
+              <span>
+                {buildExchangeBalancePreview({
+                  otherUserName,
+                  giveCount,
+                  receiveCount,
+                  pendingCountForMe: pendingForMe,
+                  pendingCountForOther: pendingForOther
+                })}
+              </span>
+            ) : (
               <span>Intercambio balanceado ({giveCount} por {receiveCount}).</span>
-            ) : null}
+            )}
           </div>
         ) : null}
 
