@@ -14,3 +14,9 @@ export const stickerCodeParamSchema = z.object({
 });
 
 export type StickerCodeParam = z.infer<typeof stickerCodeParamSchema>;
+
+export const missingUsersQuerySchema = z.object({
+  viewerUserId: z.string().uuid().optional()
+});
+
+export type MissingUsersQuery = z.infer<typeof missingUsersQuerySchema>;

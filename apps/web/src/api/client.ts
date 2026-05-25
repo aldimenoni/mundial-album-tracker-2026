@@ -79,9 +79,18 @@ export const api = {
     return request<StickerDto[]>(`/stickers${query ? `?${query}` : ""}`);
   },
 
-  findUsersMissingSticker(code: string): Promise<StickerMissingUsersDto> {
+  findUsersMissingSticker(code: string, viewerUserId?: string): Promise<StickerMissingUsersDto> {
     const normalizedCode = encodeURIComponent(code.trim().toUpperCase());
-    return request<StickerMissingUsersDto>(`/stickers/${normalizedCode}/missing-users`);
+    const params = new URLSearchParams();
+
+    if (viewerUserId) {
+      params.set("viewerUserId", viewerUserId);
+    }
+
+    const query = params.toString();
+    return request<StickerMissingUsersDto>(
+      `/stickers/${normalizedCode}/missing-users${query ? `?${query}` : ""}`
+    );
   },
 
   createUser(payload: CreateUserPayload): Promise<UserDto> {

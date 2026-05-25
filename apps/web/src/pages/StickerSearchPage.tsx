@@ -1,8 +1,10 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { Search } from "lucide-react";
-import type { StickerDto, StickerMissingUsersDto } from "@mundial-album/shared";
+import { Repeat2, Search } from "lucide-react";
+import { Link } from "react-router-dom";
+import type { StickerDto, StickerMissingExchangeHint, StickerMissingUsersDto } from "@mundial-album/shared";
 import { api } from "../api/client";
 import { getErrorMessage } from "../api/error-message";
+import { useUser } from "../state/user-store";
 
 function normalizeStickerCode(value: string): string {
   return value.trim().toUpperCase();
@@ -13,7 +15,16 @@ function formatStickerLabel(sticker: StickerDto): string {
   return details ? `${sticker.code} · ${details}` : sticker.code;
 }
 
+function getExchangeHintLabel(hint: StickerMissingExchangeHint): string {
+  if (hint === "give-this") {
+    return "Podés darle esta";
+  }
+
+  return "Cambio posible";
+}
+
 export function StickerSearchPage() {
+  const { currentUser } = useUser();
   const [stickers, setStickers] = useState<StickerDto[]>([]);
   const [code, setCode] = useState("");
   const [result, setResult] = useState<StickerMissingUsersDto | null>(null);
@@ -66,7 +77,7 @@ export function StickerSearchPage() {
     setResult(null);
 
     try {
-      const searchResult = await api.findUsersMissingSticker(normalizedCode);
+      const searchResult = await api.findUsersMissingSticker(normalizedCode, currentUser?.id);
       setResult(searchResult);
       setCode(normalizedCode);
     } catch (error: unknown) {
@@ -77,6 +88,7 @@ export function StickerSearchPage() {
   }
 
   const selectedSticker = result?.sticker ?? stickerByCode.get(normalizeStickerCode(code)) ?? null;
+  const exchangeMatches = result?.users.filter((entry) => entry.exchangeHint).length ?? 0;
 
   return (
     <section className="work-panel sticker-search-panel">
@@ -84,7 +96,11 @@ export function StickerSearchPage() {
         <div>
           <p className="eyebrow">Consulta rápida</p>
           <h2>Buscador de figuritas</h2>
-          <p>Escribí un código y mirá quién todavía no la tiene.</p>
+          <p>
+            {currentUser
+              ? "Escribí un código y mirá quién no la tiene y con quién podrías cambiarla."
+              : "Escribí un código y mirá quién todavía no la tiene."}
+          </p>
         </div>
       </div>
 
@@ -139,11 +155,20 @@ export function StickerSearchPage() {
             <>
               <p className="sticker-search-result-label">
                 Le falta a {result.users.length} {result.users.length === 1 ? "usuario" : "usuarios"}
+                {currentUser && exchangeMatches > 0
+                  ? ` · ${exchangeMatches} con posibilidad de cambio para vos`
+                  : null}
               </p>
               <div className="user-list">
-                {result.users.map(({ user }) => (
+                {result.users.map(({ user, exchangeHint }) => (
                   <div key={user.id} className="user-list-item">
                     <strong>@{user.name}</strong>
+                    {exchangeHint ? (
+                      <Link className="sticker-search-exchange-hint" to="/intercambio" title="Ir a Intercambio">
+                        <Repeat2 size={14} aria-hidden="true" />
+                        {getExchangeHintLabel(exchangeHint)}
+                      </Link>
+                    ) : null}
                   </div>
                 ))}
               </div>

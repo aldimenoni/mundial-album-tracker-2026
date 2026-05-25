@@ -642,6 +642,21 @@ a {
   margin: 0;
 }
 
+.sticker-search-exchange-hint {
+  align-items: center;
+  background: #eaf8f1;
+  border: 1px solid #9edabb;
+  border-radius: 999px;
+  color: var(--green);
+  display: inline-flex;
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  gap: 5px;
+  padding: 6px 10px;
+  white-space: nowrap;
+}
+
 .user-list {
   display: grid;
   gap: 10px;

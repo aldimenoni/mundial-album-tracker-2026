@@ -92,7 +92,10 @@ export interface CompareAlbumDto {
 export interface StickerMissingUserDto {
   user: UserDto;
   quantityOwned: number;
+  exchangeHint?: StickerMissingExchangeHint | null;
 }
+
+export type StickerMissingExchangeHint = "give-this" | "exchange-available";
 
 export interface StickerMissingUsersDto {
   sticker: StickerDto;
