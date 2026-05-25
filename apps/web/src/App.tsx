@@ -92,7 +92,7 @@ export function App() {
   }
 
   return (
-    <div className="relative flex min-h-dvh flex-col overflow-hidden bg-panini-navy">
+    <div className="relative min-h-dvh bg-panini-navy">
       <div
         aria-hidden="true"
         className="pointer-events-none fixed inset-0 -z-10 bg-panini-navy"
@@ -103,7 +103,7 @@ export function App() {
       />
       <AppHeader {...(currentUser ? { onSignOut: handleSignOut } : {})} />
 
-      <main className="relative z-10 mx-auto min-h-0 w-full max-w-3xl flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain px-4 pb-[calc(env(safe-area-inset-bottom,0px)+6.5rem)] pt-[calc(env(safe-area-inset-top,0px)+4.75rem)] [-webkit-overflow-scrolling:touch]">
+      <main className="relative z-10 mx-auto w-full max-w-3xl px-4 pb-[calc(env(safe-area-inset-bottom,0px)+6.5rem)] pt-[calc(env(safe-area-inset-top,0px)+4.75rem)]">
         <PageTransition>
           <Routes>
             <Route
