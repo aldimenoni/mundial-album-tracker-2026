@@ -1,134 +1,109 @@
+import { motion } from "framer-motion";
 import type { HTMLAttributes } from "react";
-
-type SkeletonProps = HTMLAttributes<HTMLDivElement> & {
-  width?: string;
-  height?: string;
-  rounded?: "sm" | "md" | "lg" | "pill";
-};
-
-const roundedClassName = {
-  sm: "skeleton-rounded-sm",
-  md: "skeleton-rounded-md",
-  lg: "skeleton-rounded-lg",
-  pill: "skeleton-rounded-pill"
-} as const;
+import { cn } from "../../lib/cn";
 
 export function Skeleton({
+  className,
   width,
   height,
   rounded = "md",
-  className = "",
-  style,
   ...props
-}: SkeletonProps) {
+}: HTMLAttributes<HTMLDivElement> & {
+  width?: string | number;
+  height?: string | number;
+  rounded?: "sm" | "md" | "lg" | "pill";
+}) {
+  const roundedClass = {
+    sm: "rounded-lg",
+    md: "rounded-xl",
+    lg: "rounded-2xl",
+    pill: "rounded-full"
+  }[rounded];
+
   return (
     <div
       aria-hidden="true"
-      className={`skeleton ${roundedClassName[rounded]} ${className}`.trim()}
-      style={{ width, height, ...style }}
+      className={cn("animate-pulse bg-white/10", roundedClass, className)}
+      style={{ width, height }}
       {...props}
     />
   );
 }
 
-export function SkeletonText({
-  lines = 3,
-  className = ""
-}: {
-  lines?: number;
-  className?: string;
-}) {
+function PanelSkeleton({ children }: { children: React.ReactNode }) {
   return (
-    <div className={`skeleton-stack ${className}`.trim()}>
-      {Array.from({ length: lines }, (_, index) => (
-        <Skeleton
-          key={index}
-          className={index === lines - 1 ? "skeleton-line skeleton-line-short" : "skeleton-line"}
-        />
-      ))}
+    <div className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/8 p-4 backdrop-blur-xl">
+      {children}
     </div>
   );
 }
 
 export function RouteFallback() {
   return (
-    <section className="stack" aria-busy="true" aria-label="Cargando pagina">
-      <div className="page-heading">
-        <Skeleton className="skeleton-line skeleton-line-xs" />
-        <Skeleton className="skeleton-line skeleton-line-lg" />
-      </div>
-      <Skeleton className="skeleton-panel skeleton-panel-tall" />
-    </section>
+    <div className="grid gap-4" aria-label="Cargando pagina" aria-busy="true">
+      <Skeleton height={28} width="45%" rounded="pill" />
+      <PanelSkeleton>
+        <Skeleton height={180} rounded="lg" />
+      </PanelSkeleton>
+    </div>
   );
 }
 
 export function SummaryPageSkeleton() {
   return (
-    <div className="stack" aria-busy="true" aria-label="Cargando resumen">
-      <Skeleton className="skeleton-panel">
-        <div className="skeleton-summary-header">
-          <div className="skeleton-stack skeleton-stack-tight">
-            <Skeleton className="skeleton-line skeleton-line-xs" />
-            <Skeleton className="skeleton-line skeleton-line-lg" />
-            <Skeleton className="skeleton-line skeleton-line-sm" />
+    <div className="grid gap-4" aria-busy="true">
+      <PanelSkeleton>
+        <div className="flex gap-3">
+          <Skeleton height={80} width={80} rounded="pill" />
+          <div className="grid flex-1 gap-2">
+            <Skeleton height={18} width="40%" />
+            <Skeleton height={28} width="70%" />
+            <Skeleton height={12} />
           </div>
-          <Skeleton className="skeleton-circle skeleton-circle-lg" rounded="pill" />
         </div>
-        <Skeleton className="skeleton-line skeleton-line-full skeleton-progress" />
-        <div className="skeleton-metric-grid">
-          {Array.from({ length: 8 }, (_, index) => (
-            <Skeleton key={index} className="skeleton-metric-card" />
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <Skeleton key={index} height={72} rounded="lg" />
           ))}
         </div>
-      </Skeleton>
-
-      <Skeleton className="skeleton-panel">
-        <Skeleton className="skeleton-line skeleton-line-md" />
-        <div className="skeleton-medal-grid">
-          {Array.from({ length: 6 }, (_, index) => (
-            <Skeleton key={index} className="skeleton-medal-card" />
-          ))}
-        </div>
-      </Skeleton>
-
-      <Skeleton className="skeleton-panel">
-        <Skeleton className="skeleton-line skeleton-line-md" />
-        <div className="skeleton-list">
-          {Array.from({ length: 5 }, (_, index) => (
-            <Skeleton key={index} className="skeleton-list-row" />
-          ))}
-        </div>
-      </Skeleton>
+      </PanelSkeleton>
+      <PanelSkeleton>
+        <Skeleton height={220} rounded="lg" />
+      </PanelSkeleton>
+      <PanelSkeleton>
+        <Skeleton height={160} rounded="lg" />
+      </PanelSkeleton>
     </div>
   );
 }
 
 export function AlbumPageSkeleton() {
   return (
-    <div className="stack" aria-busy="true" aria-label="Cargando album">
-      <Skeleton className="skeleton-line skeleton-line-md" />
-      <Skeleton className="skeleton-panel skeleton-spread-panel">
-        <Skeleton className="skeleton-line skeleton-line-sm" />
-        <Skeleton className="skeleton-spread-hero" />
-        <div className="skeleton-sticker-grid">
-          {Array.from({ length: 6 }, (_, index) => (
-            <Skeleton key={index} className="skeleton-sticker-card" />
-          ))}
-        </div>
-      </Skeleton>
+    <div className="grid gap-4" aria-busy="true">
+      <Skeleton height={120} rounded="lg" />
+      <div className="grid grid-cols-2 gap-3">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <Skeleton key={index} height={180} rounded="lg" />
+        ))}
+      </div>
     </div>
   );
 }
 
 export function ExchangePageSkeleton() {
   return (
-    <div className="stack" aria-busy="true" aria-label="Cargando intercambios">
-      {Array.from({ length: 2 }, (_, index) => (
-        <Skeleton key={index} className="skeleton-panel skeleton-exchange-card">
-          <Skeleton className="skeleton-line skeleton-line-md" />
-          <SkeletonText lines={2} />
-          <Skeleton className="skeleton-line skeleton-line-full skeleton-button" />
-        </Skeleton>
+    <div className="grid gap-4" aria-busy="true">
+      {Array.from({ length: 2 }).map((_, index) => (
+        <PanelSkeleton key={index}>
+          <div className="flex gap-3">
+            <Skeleton height={56} width={56} rounded="pill" />
+            <div className="grid flex-1 gap-2">
+              <Skeleton height={18} width="35%" />
+              <Skeleton height={14} width="55%" />
+            </div>
+          </div>
+          <Skeleton className="mt-3" height={120} rounded="lg" />
+        </PanelSkeleton>
       ))}
     </div>
   );
@@ -136,21 +111,18 @@ export function ExchangePageSkeleton() {
 
 export function SearchPageSkeleton() {
   return (
-    <div className="stack" aria-busy="true" aria-label="Cargando buscador">
-      <Skeleton className="skeleton-panel">
-        <Skeleton className="skeleton-line skeleton-line-md" />
-        <Skeleton className="skeleton-line skeleton-line-full skeleton-input" />
-        <Skeleton className="skeleton-line skeleton-line-full skeleton-button" />
-      </Skeleton>
+    <div className="grid gap-4" aria-busy="true">
+      <Skeleton height={56} rounded="lg" />
+      <Skeleton height={48} rounded="lg" />
     </div>
   );
 }
 
 export function UserListSkeleton() {
   return (
-    <div className="skeleton-list" aria-busy="true" aria-label="Cargando usuarios">
-      {Array.from({ length: 4 }, (_, index) => (
-        <Skeleton key={index} className="skeleton-list-row skeleton-list-row-action" />
+    <div className="grid gap-3" aria-busy="true">
+      {Array.from({ length: 4 }).map((_, index) => (
+        <Skeleton key={index} height={88} rounded="lg" />
       ))}
     </div>
   );

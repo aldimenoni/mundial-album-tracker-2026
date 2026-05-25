@@ -1,10 +1,14 @@
 import { FormEvent, useMemo, useState } from "react";
-import { Repeat2, Search } from "lucide-react";
+import { motion } from "framer-motion";
+import { Repeat2, Search, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { StickerDto, StickerMissingExchangeHint, StickerMissingUsersDto } from "@mundial-album/shared";
 import { formatStickerAlbumLocation } from "@mundial-album/shared";
 import { api } from "../api/client";
 import { getErrorMessage } from "../api/error-message";
+import { AppCard } from "../components/ui/AppCard";
+import { AlertBanner, EmptyState, SectionHeader } from "../components/ui/Badges";
+import { GradientButton } from "../components/ui/GradientButton";
 import { SearchPageSkeleton } from "../components/ui/Skeleton";
 import { useQuery } from "../hooks/useQuery";
 import { useUser } from "../state/user-store";
@@ -80,106 +84,143 @@ export function StickerSearchPage() {
 
   if (isLoadingCatalog && stickers.length === 0) {
     return (
-      <section className="work-panel sticker-search-panel stack">
-        <div className="page-heading">
-          <div>
-            <p className="eyebrow">Consulta rápida</p>
-            <h2>Buscador de figuritas</h2>
-          </div>
-        </div>
+      <section className="grid gap-4">
+        <AppCard>
+          <SectionHeader eyebrow="Consulta rápida" title="Buscador de figuritas" />
+        </AppCard>
         <SearchPageSkeleton />
       </section>
     );
   }
 
   return (
-    <section className="work-panel sticker-search-panel">
-      <div className="page-heading">
-        <div>
-          <p className="eyebrow">Consulta rápida</p>
-          <h2>Buscador de figuritas</h2>
-          <p>
-            {currentUser
-              ? "Escribí un código y mirá quién no la tiene y con quién podrías cambiarla."
-              : "Escribí un código y mirá quién todavía no la tiene."}
-          </p>
-        </div>
-      </div>
+    <section className="grid gap-4">
+      <AppCard>
+        <SectionHeader
+          eyebrow="Consulta rápida"
+          title="Buscador de figuritas"
+          subtitle={
+            currentUser
+              ? "Mirá quién no la tiene y con quién podrías cambiarla."
+              : "Mirá quién todavía no la tiene."
+          }
+        />
 
-      <form className="form-grid sticker-search-form" onSubmit={(event) => void handleSearch(event)}>
-        <label className="field">
-          <span>Código</span>
-          <input
-            value={code}
-            list="sticker-code-suggestions"
-            autoComplete="off"
-            autoCapitalize="characters"
-            spellCheck={false}
-            placeholder="ARG10"
-            onChange={(event) => {
-              setCode(event.currentTarget.value.toUpperCase());
-              setErrorMessage(null);
-            }}
-          />
-        </label>
+        <form className="mt-4 grid gap-3" onSubmit={(event) => void handleSearch(event)}>
+          <label className="field">
+            <span>Código</span>
+            <div className="relative">
+              <Search
+                size={18}
+                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-white/45"
+                aria-hidden="true"
+              />
+              <input
+                value={code}
+                list="sticker-code-suggestions"
+                autoComplete="off"
+                autoCapitalize="characters"
+                spellCheck={false}
+                placeholder="ARG10"
+                className="!pl-11 !text-lg !font-black !tracking-wider"
+                onChange={(event) => {
+                  setCode(event.currentTarget.value.toUpperCase());
+                  setErrorMessage(null);
+                }}
+              />
+            </div>
+          </label>
 
-        <datalist id="sticker-code-suggestions">
-          {stickers.map((sticker) => (
-            <option key={sticker.id} value={sticker.code} label={formatStickerLabel(sticker)} />
-          ))}
-        </datalist>
+          <datalist id="sticker-code-suggestions">
+            {stickers.map((sticker) => (
+              <option key={sticker.id} value={sticker.code} label={formatStickerLabel(sticker)} />
+            ))}
+          </datalist>
 
-        <button className="primary-button sticker-search-button" type="submit" disabled={isSearching}>
-          <Search size={18} aria-hidden="true" />
-          {isSearching ? "Buscando..." : "Buscar"}
-        </button>
-      </form>
+          <GradientButton type="submit" size="lg" disabled={isSearching}>
+            <Search size={18} aria-hidden="true" />
+            {isSearching ? "Buscando..." : "Buscar figurita"}
+          </GradientButton>
+        </form>
+      </AppCard>
 
-      {error ? <p className="alert">{getErrorMessage(error)}</p> : null}
-      {errorMessage ? <p className="alert">{errorMessage}</p> : null}
+      {error ? <AlertBanner>{getErrorMessage(error)}</AlertBanner> : null}
+      {errorMessage ? <AlertBanner>{errorMessage}</AlertBanner> : null}
 
       {result ? (
-        <div className="sticker-search-result">
-          <div className="sticker-search-summary">
-            <p className="eyebrow">Figurita</p>
-            <h3>{result.sticker.code}</h3>
-            {selectedSticker?.playerName || selectedSticker?.team ? (
-              <p className="sticker-search-meta">
-                {[selectedSticker?.playerName, selectedSticker?.team].filter(Boolean).join(" · ")}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="grid gap-3"
+        >
+          <AppCard glow className="p-4">
+            <div>
+              <p className="text-[0.68rem] font-extrabold uppercase tracking-[0.14em] text-panini-gold">
+                Figurita
               </p>
-            ) : null}
-            {selectedSticker ? (
-              <p className="sticker-search-meta">{formatStickerAlbumLocation(selectedSticker)}</p>
-            ) : null}
-          </div>
+              <h3 className="mt-1 text-3xl font-black tracking-wide text-white">{result.sticker.code}</h3>
+              {selectedSticker?.playerName || selectedSticker?.team ? (
+                <p className="mt-2 text-sm font-semibold text-white/70">
+                  {[selectedSticker?.playerName, selectedSticker?.team].filter(Boolean).join(" · ")}
+                </p>
+              ) : null}
+              {selectedSticker ? (
+                <p className="mt-1 text-xs font-bold text-white/50">
+                  {formatStickerAlbumLocation(selectedSticker)}
+                </p>
+              ) : null}
+            </div>
+          </AppCard>
 
           {result.users.length === 0 ? (
-            <p className="success-banner">Todos los usuarios ya tienen esta figurita.</p>
+            <AlertBanner tone="success">
+              Todos los usuarios ya tienen esta figurita. Colección completa 🎉
+            </AlertBanner>
           ) : (
             <>
-              <p className="sticker-search-result-label">
-                Le falta a {result.users.length} {result.users.length === 1 ? "usuario" : "usuarios"}
-                {currentUser && exchangeMatches > 0
-                  ? ` · ${exchangeMatches} con posibilidad de cambio para vos`
-                  : null}
-              </p>
-              <div className="user-list">
+              <AppCard className="flex items-center gap-3 p-4">
+                <Users className="text-emerald-300" size={20} />
+                <p className="text-sm font-bold text-white/80">
+                  {result.users.length === 1
+                    ? "1 persona la necesita"
+                    : `${result.users.length} personas la necesitan`}
+                  {currentUser && exchangeMatches > 0
+                    ? ` · ${exchangeMatches} con posibilidad de cambio para vos`
+                    : null}
+                </p>
+              </AppCard>
+
+              <div className="grid gap-2">
                 {result.users.map(({ user, exchangeHint }) => (
-                  <div key={user.id} className="user-list-item">
-                    <strong>@{user.name}</strong>
+                  <AppCard key={user.id} className="flex items-center justify-between gap-3 p-3">
+                    <strong className="truncate text-sm font-black text-white">@{user.name}</strong>
                     {exchangeHint ? (
-                      <Link className="sticker-search-exchange-hint" to="/intercambio" title="Ir a Intercambio">
+                      <Link
+                        className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-400/30 bg-emerald-500/15 px-3 py-1.5 text-xs font-extrabold text-emerald-100 no-underline"
+                        to="/intercambio"
+                        title="Ir a Intercambio"
+                      >
                         <Repeat2 size={14} aria-hidden="true" />
                         {getExchangeHintLabel(exchangeHint)}
                       </Link>
-                    ) : null}
-                  </div>
+                    ) : (
+                      <span className="rounded-full bg-rose-500/15 px-3 py-1 text-xs font-extrabold text-rose-100">
+                        Le falta
+                      </span>
+                    )}
+                  </AppCard>
                 ))}
               </div>
             </>
           )}
-        </div>
-      ) : null}
+        </motion.div>
+      ) : (
+        <EmptyState
+          title="Buscá por código"
+          description="Probá ARG10, BRA14 o cualquier código del álbum."
+          icon={<Search size={28} />}
+        />
+      )}
     </section>
   );
 }

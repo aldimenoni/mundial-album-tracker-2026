@@ -3,12 +3,14 @@ import type { ReactNode } from "react";
 import {
   Album,
   Home,
-  LogOut,
   Repeat2,
   Search,
   UserRound
 } from "lucide-react";
-import { NavLink, Navigate, Route, Routes, useNavigate } from "react-router-dom";
+import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
+import { AppHeader } from "./components/layout/AppHeader";
+import { FloatingBottomNav } from "./components/layout/FloatingBottomNav";
+import { PageTransition } from "./components/layout/PageTransition";
 import { RouteFallback } from "./components/ui/Skeleton";
 import { prefetchQuery } from "./hooks/useQuery";
 import { api } from "./api/client";
@@ -90,100 +92,65 @@ export function App() {
   }
 
   return (
-    <div className="app-shell">
-      <header className="topbar">
-        <div className="brand-lockup">
-          <img
-            className="brand-emblem"
-            src="/brand/world-cup-2026.svg"
-            alt="Copa del Mundo FIFA"
-          />
-          <div className="brand-copy">
-            <p className="eyebrow">FIFA World Cup 2026</p>
-            <h1>Album Tracker</h1>
-          </div>
-        </div>
-        <div className="active-user">
-          {currentUser ? <span>@{currentUser.name}</span> : null}
-          {currentUser ? (
-            <button
-              className="icon-button icon-button-ghost"
-              type="button"
-              aria-label="Salir"
-              title="Salir"
-              onClick={handleSignOut}
-            >
-              <LogOut size={18} aria-hidden="true" />
-            </button>
-          ) : null}
-        </div>
-      </header>
+    <div className="relative flex h-dvh flex-col overflow-hidden">
+      <AppHeader {...(currentUser ? { onSignOut: handleSignOut } : {})} />
 
-      <main className="page-shell">
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <LazyPage>
-                <DefaultRoute />
-              </LazyPage>
-            }
-          />
-          <Route
-            path="/usuarios"
-            element={
-              <LazyPage>
-                <GuestOnly>
-                  <UserSelectionPage />
-                </GuestOnly>
-              </LazyPage>
-            }
-          />
-          <Route
-            path="/buscar"
-            element={
-              <LazyPage>
-                <StickerSearchPage />
-              </LazyPage>
-            }
-          />
-          <Route
-            path="/mi-album"
-            element={
-              <LazyPage>
-                <RequireUser>
-                  <MyAlbumPage />
-                </RequireUser>
-              </LazyPage>
-            }
-          />
-          <Route
-            path="/intercambio"
-            element={
-              <LazyPage>
-                <RequireUser>
-                  <HomePage />
-                </RequireUser>
-              </LazyPage>
-            }
-          />
-          <Route path="/resumen" element={<Navigate to="/" replace />} />
-          <Route path="/comparar" element={<Navigate to="/intercambio" replace />} />
-        </Routes>
+      <main className="relative z-10 mx-auto min-h-0 w-full max-w-3xl flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain px-4 pb-[calc(env(safe-area-inset-bottom,0px)+6.5rem)] pt-[calc(env(safe-area-inset-top,0px)+4.75rem)] [-webkit-overflow-scrolling:touch]">
+        <PageTransition>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <LazyPage>
+                  <DefaultRoute />
+                </LazyPage>
+              }
+            />
+            <Route
+              path="/usuarios"
+              element={
+                <LazyPage>
+                  <GuestOnly>
+                    <UserSelectionPage />
+                  </GuestOnly>
+                </LazyPage>
+              }
+            />
+            <Route
+              path="/buscar"
+              element={
+                <LazyPage>
+                  <StickerSearchPage />
+                </LazyPage>
+              }
+            />
+            <Route
+              path="/mi-album"
+              element={
+                <LazyPage>
+                  <RequireUser>
+                    <MyAlbumPage />
+                  </RequireUser>
+                </LazyPage>
+              }
+            />
+            <Route
+              path="/intercambio"
+              element={
+                <LazyPage>
+                  <RequireUser>
+                    <HomePage />
+                  </RequireUser>
+                </LazyPage>
+              }
+            />
+            <Route path="/resumen" element={<Navigate to="/" replace />} />
+            <Route path="/comparar" element={<Navigate to="/intercambio" replace />} />
+          </Routes>
+        </PageTransition>
       </main>
 
-      <nav className="bottom-nav" aria-label="Navegacion principal">
-        {visibleNavigationItems.map((item) => {
-          const Icon = item.icon;
-
-          return (
-            <NavLink key={item.to} to={item.to} title={item.label}>
-              <Icon size={22} aria-hidden="true" />
-              <span>{item.shortLabel}</span>
-            </NavLink>
-          );
-        })}
-      </nav>
+      <FloatingBottomNav items={[...visibleNavigationItems]} />
     </div>
   );
 }

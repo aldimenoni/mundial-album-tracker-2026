@@ -96,10 +96,10 @@ export function determineExchangeType(
       pendingCountForOther: 0,
       message:
         canGive.length > 0
-          ? `@${otherName} no tiene repetidas para un intercambio uno a uno. Probá el intercambio personalizado.`
+          ? `@${otherName} no tiene repetidas para un intercambio.`
           : canReceive.length > 0
             ? `No tenés repetidas que le falten a @${otherName}.`
-            : "No hay intercambios uno a uno disponibles por ahora."
+            : `No hay intercambios disponibles con @${otherName}.`
     };
   }
 

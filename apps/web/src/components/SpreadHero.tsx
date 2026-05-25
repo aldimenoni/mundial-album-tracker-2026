@@ -35,18 +35,19 @@ export function SpreadHero({
 
   return (
     <div
-      className="spread-hero"
+      className="grid grid-cols-[2.5rem_1fr_2.5rem] items-center gap-2 px-3 py-4 text-white"
       style={
         {
           "--spread-primary": theme.primary,
           "--spread-secondary": theme.secondary,
-          "--spread-accent": theme.accent
+          "--spread-accent": theme.accent,
+          background: `linear-gradient(135deg, ${theme.primary} 0%, ${theme.secondary} 100%)`
         } as CSSProperties
       }
     >
       {showNavigation ? (
         <button
-          className="spread-hero-nav"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-black/20 text-white disabled:opacity-35"
           type="button"
           aria-label="Cuadro anterior"
           disabled={!canGoPrevious}
@@ -55,35 +56,48 @@ export function SpreadHero({
           <ChevronLeft size={20} aria-hidden="true" />
         </button>
       ) : (
-        <div className="spread-hero-nav-spacer" aria-hidden="true" />
+        <span aria-hidden="true" className="h-10 w-10" />
       )}
 
-      <div className="spread-hero-center">
-        {groupLabel ? <p className="spread-hero-group">{groupLabel}</p> : null}
-        {pageLabel ? <p className="spread-hero-page">{pageLabel}</p> : null}
+      <div className="min-w-0 text-center">
+        {groupLabel ? (
+          <p className="truncate text-[0.65rem] font-bold uppercase tracking-wide text-white/85">
+            {groupLabel}
+          </p>
+        ) : null}
+        {pageLabel ? (
+          <p className="truncate text-[0.65rem] font-bold uppercase tracking-wide text-white/70">
+            {pageLabel}
+          </p>
+        ) : null}
 
-        <div className="spread-hero-title-row">
+        <div className="mt-1 flex items-center justify-center gap-2">
           {badgeSrc ? (
-            <div className="spread-hero-badge-wrap">
-              <img className="spread-hero-badge" src={badgeSrc} alt="" loading="lazy" />
-            </div>
+            <img
+              className="h-8 w-8 shrink-0 rounded-full border-2 border-white/40 object-cover"
+              src={badgeSrc}
+              alt=""
+              loading="lazy"
+            />
           ) : null}
-          <div className="spread-hero-title-copy">
-            <h2>{title}</h2>
-            {subtitle ? <p className="spread-hero-subtitle">{subtitle}</p> : null}
+          <div className="min-w-0">
+            <h2 className="truncate text-base font-black">{title}</h2>
+            {subtitle ? (
+              <p className="truncate text-[0.65rem] font-semibold uppercase text-white/75">{subtitle}</p>
+            ) : null}
           </div>
         </div>
 
-        <p className="spread-hero-progress">
-          <strong>
+        <p className="mt-2 text-sm font-black tabular-nums">
+          <span className="rounded-full bg-black/25 px-3 py-1">
             {owned}/{total}
-          </strong>
+          </span>
         </p>
       </div>
 
       {showNavigation ? (
         <button
-          className="spread-hero-nav"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-black/20 text-white disabled:opacity-35"
           type="button"
           aria-label="Cuadro siguiente"
           disabled={!canGoNext}
@@ -92,7 +106,7 @@ export function SpreadHero({
           <ChevronRight size={20} aria-hidden="true" />
         </button>
       ) : (
-        <div className="spread-hero-nav-spacer" aria-hidden="true" />
+        <span aria-hidden="true" className="h-10 w-10" />
       )}
     </div>
   );

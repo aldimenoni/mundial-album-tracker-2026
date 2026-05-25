@@ -1,5 +1,7 @@
 import type { SettlementOptionDto, StickerDto } from "@mundial-album/shared";
 import { ArrowLeftRight, Loader2 } from "lucide-react";
+import { cn } from "../lib/cn";
+import { GradientButton, IconButton } from "./ui/GradientButton";
 
 export type ExchangeSelection = {
   stickersGivenByMe: string[];
@@ -15,6 +17,9 @@ type ExchangeOptionListProps = {
   confirmAllLabel?: string;
   busyAllLabel?: string;
 };
+
+const ROW_SURFACE =
+  "rounded-2xl border border-white/12 bg-white/8 p-3 backdrop-blur-md";
 
 function optionKey(option: SettlementOptionDto): string {
   return `${option.give?.code ?? "-"}:${option.receive?.code ?? "-"}`;
@@ -52,9 +57,15 @@ function StickerChip({
   tone: "give" | "receive";
 }) {
   return (
-    <div className={`suggestion-sticker suggestion-sticker-${tone}`}>
-      <strong>{sticker.playerName ?? sticker.code}</strong>
-      <span>{sticker.code}</span>
+    <div
+      className={cn(
+        "grid gap-0.5 rounded-xl border px-2 py-2 text-center text-[0.68rem] font-bold",
+        tone === "give" && "border-amber-400/25 bg-white/5 text-amber-100",
+        tone === "receive" && "border-emerald-400/25 bg-white/5 text-emerald-100"
+      )}
+    >
+      <strong className="line-clamp-2 text-sm font-extrabold">{sticker.playerName ?? sticker.code}</strong>
+      <span className="text-[0.72rem] font-bold text-white/55">{sticker.code}</span>
     </div>
   );
 }
@@ -72,37 +83,37 @@ function ExchangeOptionRow({
   const hasReceive = Boolean(option.receive);
 
   return (
-    <article className="exchange-option-row">
-      <div className="exchange-option-trade">
-        <div className="exchange-option-slot exchange-option-slot-receive">
+    <article className={cn(ROW_SURFACE, "grid gap-3", "grid-cols-[minmax(0,1fr)_auto]")}>
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+        <div className="min-w-0">
           {hasReceive && option.receive ? (
             <StickerChip sticker={option.receive} tone="receive" />
           ) : null}
         </div>
 
-        <div className="exchange-option-divider" aria-hidden="true">
+        <div className="flex items-center justify-center text-white/45" aria-hidden="true">
           {hasGive && hasReceive ? <ArrowLeftRight size={16} /> : null}
         </div>
 
-        <div className="exchange-option-slot exchange-option-slot-give">
+        <div className="min-w-0">
           {hasGive && option.give ? <StickerChip sticker={option.give} tone="give" /> : null}
         </div>
       </div>
 
       {onConfirm ? (
-        <button
-          className="primary-button exchange-option-confirm"
+        <IconButton
           type="button"
           disabled={isBusy}
           aria-label={isBusy ? "Intercambiando figurita" : "Intercambiar figurita"}
+          className="!h-11 !w-11 self-center"
           onClick={onConfirm}
         >
           {isBusy ? (
-            <Loader2 size={18} className="exchange-option-spinner" aria-hidden="true" />
+            <Loader2 size={18} className="animate-spin" aria-hidden="true" />
           ) : (
             <ArrowLeftRight size={18} aria-hidden="true" />
           )}
-        </button>
+        </IconButton>
       ) : null}
     </article>
   );
@@ -125,15 +136,12 @@ export function ExchangeOptionList({
   const isConfirmingAll = isBusy && busyOptionKey === "all";
 
   return (
-    <div className="suggestions">
-      <div className="suggestions-heading">
-        <h3>Cambios disponibles</h3>
-        {options.length > 4 ? (
-          <span className="suggestions-scroll-hint">Deslizá para ver todos</span>
-        ) : null}
-      </div>
+    <div className="grid gap-3">
+      {options.length > 4 ? (
+        <p className="text-[0.72rem] font-bold text-white/45">Deslizá para ver todos</p>
+      ) : null}
 
-      <div className="suggestion-list">
+      <div className="grid max-h-[min(20rem,52vh)] gap-2 overflow-y-auto overscroll-contain">
         {options.map((option) => {
           const key = optionKey(option);
 
@@ -153,29 +161,28 @@ export function ExchangeOptionList({
       </div>
 
       {showConfirmAll ? (
-        <div className="exchange-action-buttons exchange-action-buttons-all">
-          <button
-            className="primary-button"
-            type="button"
-            disabled={isBusy}
-            onClick={() => onConfirmAll?.(optionsToAllSelection(options))}
-          >
-            {isConfirmingAll ? (
-              <>
-                <Loader2 size={18} className="exchange-option-spinner" aria-hidden="true" />
-                {busyAllLabel}
-              </>
-            ) : (
-              confirmAllLabel
-            )}
-          </button>
-        </div>
+        <GradientButton
+          type="button"
+          disabled={isBusy}
+          onClick={() => onConfirmAll?.(optionsToAllSelection(options))}
+        >
+          {isConfirmingAll ? (
+            <>
+              <Loader2 size={18} className="animate-spin" aria-hidden="true" />
+              {busyAllLabel}
+            </>
+          ) : (
+            confirmAllLabel
+          )}
+        </GradientButton>
       ) : null}
     </div>
   );
 }
 
-export function suggestionsToOptions(suggestions: Array<{ give: StickerDto | null; receive: StickerDto | null }>): SettlementOptionDto[] {
+export function suggestionsToOptions(
+  suggestions: Array<{ give: StickerDto | null; receive: StickerDto | null }>
+): SettlementOptionDto[] {
   return suggestions.map((suggestion) => ({
     give: suggestion.give,
     receive: suggestion.receive

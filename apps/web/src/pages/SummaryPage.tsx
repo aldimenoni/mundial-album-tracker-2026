@@ -6,6 +6,7 @@ import { AlbumSummaryCard } from "../components/AlbumSummaryCard";
 import { LegendaryMedalsSection } from "../components/LegendaryMedalsSection";
 import { RepeatedStickersModal } from "../components/RepeatedStickersModal";
 import { SpreadProgressList } from "../components/SpreadProgressList";
+import { AlertBanner } from "../components/ui/Badges";
 import { SummaryPageSkeleton } from "../components/ui/Skeleton";
 import { useQuery } from "../hooks/useQuery";
 import { useRequiredUser } from "../state/user-store";
@@ -43,10 +44,10 @@ export function SummaryPage() {
   }
 
   return (
-    <section className="stack">
-      {error ? <p className="alert">{getErrorMessage(error)}</p> : null}
+    <section className="grid gap-4">
+      {error ? <AlertBanner>{getErrorMessage(error)}</AlertBanner> : null}
       {repeatedErrorMessage && repeatedModalOpen ? (
-        <p className="alert">{repeatedErrorMessage}</p>
+        <AlertBanner>{repeatedErrorMessage}</AlertBanner>
       ) : null}
       {isFetching && summary ? <p className="fetching-indicator">Actualizando...</p> : null}
       {isLoading && !summary ? <SummaryPageSkeleton /> : null}

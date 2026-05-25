@@ -1,6 +1,6 @@
 import { useRef, type TouchEvent as ReactTouchEvent } from "react";
 
-const SWIPE_MIN_DISTANCE = 50;
+const SWIPE_MIN_DISTANCE = 56;
 
 type UseSwipeNavigationOptions = {
   onSwipeLeft?: () => void;
@@ -13,7 +13,11 @@ function isInteractiveTarget(target: EventTarget | null): boolean {
     return false;
   }
 
-  return Boolean(target.closest("button, input, select, textarea, a, label"));
+  return Boolean(
+    target.closest(
+      "button, input, select, textarea, a, label, summary, [role='button'], [contenteditable='true']"
+    )
+  );
 }
 
 export function useSwipeNavigation({
@@ -22,6 +26,11 @@ export function useSwipeNavigation({
   enabled = true
 }: UseSwipeNavigationOptions) {
   const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const onSwipeLeftRef = useRef(onSwipeLeft);
+  const onSwipeRightRef = useRef(onSwipeRight);
+
+  onSwipeLeftRef.current = onSwipeLeft;
+  onSwipeRightRef.current = onSwipeRight;
 
   function resetTouchStart(): void {
     touchStart.current = null;
@@ -58,21 +67,22 @@ export function useSwipeNavigation({
     const deltaY = touchStart.current.y - touch.clientY;
     resetTouchStart();
 
-    if (Math.abs(deltaX) < SWIPE_MIN_DISTANCE || Math.abs(deltaX) <= Math.abs(deltaY)) {
+    if (Math.abs(deltaX) < SWIPE_MIN_DISTANCE || Math.abs(deltaX) <= Math.abs(deltaY) * 1.15) {
       return;
     }
 
     if (deltaX > 0) {
-      onSwipeLeft?.();
+      onSwipeLeftRef.current?.();
       return;
     }
 
-    onSwipeRight?.();
+    onSwipeRightRef.current?.();
   }
 
   return {
     onTouchStart: handleTouchStart,
     onTouchEnd: handleTouchEnd,
-    onTouchCancel: resetTouchStart
+    onTouchCancel: resetTouchStart,
+    className: enabled ? "album-spread-swipeable" : undefined
   };
 }

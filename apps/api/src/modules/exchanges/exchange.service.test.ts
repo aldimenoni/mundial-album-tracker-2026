@@ -74,8 +74,16 @@ describe("ExchangeService", () => {
       "NOT_AVAILABLE"
     );
     assert.equal(
+      determineExchangeType(["ARG10", "URU4"], [], "sofi").message,
+      "@sofi no tiene repetidas para un intercambio."
+    );
+    assert.equal(
       determineExchangeType([], ["BRA5"], "sofi").type,
       "NOT_AVAILABLE"
+    );
+    assert.equal(
+      determineExchangeType([], ["BRA5"], "sofi").message,
+      "No tenés repetidas que le falten a @sofi."
     );
   });
 
@@ -137,6 +145,7 @@ describe("ExchangeService", () => {
     const result = determineExchangeType([], [], "sofi");
 
     assert.equal(result.type, "NOT_AVAILABLE");
+    assert.equal(result.message, "No hay intercambios disponibles con @sofi.");
   });
 
   it("analyzes balanced exchange scenario", () => {

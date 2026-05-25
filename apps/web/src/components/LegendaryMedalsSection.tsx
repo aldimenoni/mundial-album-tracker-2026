@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { motion } from "framer-motion";
 import type { LegendaryPlayerMedalDto } from "@mundial-album/shared";
 import { getFlagSrc, getTeamTheme } from "@mundial-album/shared";
 import { Lock, Sparkles, Star } from "lucide-react";
+import { AppCard } from "./ui/AppCard";
+import { SectionHeader } from "./ui/Badges";
+import { cn } from "../lib/cn";
 
 type LegendaryMedalsSectionProps = {
   medals: LegendaryPlayerMedalDto[];
@@ -60,7 +64,7 @@ export function LegendaryMedalsSection({ medals }: LegendaryMedalsSectionProps) 
         return;
       }
 
-      const slides = carousel.querySelectorAll<HTMLElement>(".legendary-medal");
+      const slides = carousel.querySelectorAll<HTMLElement>("[data-medal-slide]");
 
       if (!slides.length) {
         return;
@@ -92,26 +96,32 @@ export function LegendaryMedalsSection({ medals }: LegendaryMedalsSectionProps) 
   }, [sortedMedals.length]);
 
   return (
-    <section className="summary-panel legendary-medals-panel" aria-label="Jugadores estrella conseguidos">
-      <div className="legendary-medals-glow" aria-hidden="true" />
-
-      <div className="summary-section-header legendary-medals-header">
-        <div>
-          <p className="eyebrow legendary-medals-eyebrow">
-            <Sparkles size={13} aria-hidden="true" />
-            Colección especial
-          </p>
-          <h3>Jugadores estrella</h3>
-          <p className="legendary-medals-hint">Deslizá para ver tu colección</p>
+    <AppCard glow className="spotlight overflow-hidden p-0" aria-label="Jugadores estrella conseguidos">
+      <div className="border-b border-white/10 p-4">
+        <div className="flex items-start justify-between gap-3">
+          <SectionHeader
+            eyebrow={
+              <span className="inline-flex items-center gap-1">
+                <Sparkles size={13} aria-hidden="true" />
+                Colección especial
+              </span>
+            }
+            title="Jugadores estrella"
+            subtitle="Deslizá para ver tu colección holográfica"
+          />
+          <span className="inline-flex h-10 shrink-0 items-center justify-center gap-0.5 rounded-full border border-panini-gold/35 bg-panini-gold/15 px-2.5 text-[0.7rem] font-extrabold leading-none tabular-nums">
+            <span className="text-panini-gold">{earnedCount}</span>
+            <span className="text-white/50">/</span>
+            <span className="text-white/70">{sortedMedals.length}</span>
+          </span>
         </div>
-        <span className="legendary-medals-counter">
-          <strong>{earnedCount}</strong>
-          <span>/ {sortedMedals.length}</span>
-        </span>
       </div>
 
-      <div ref={carouselRef} className="legendary-medals-carousel">
-        {sortedMedals.map((medal) => {
+      <div
+        ref={carouselRef}
+        className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 py-5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {sortedMedals.map((medal, index) => {
           const theme = getTeamTheme(medal.team) ?? {
             flagCode: "xx",
             primary: "#0b1f4b",
@@ -120,25 +130,34 @@ export function LegendaryMedalsSection({ medals }: LegendaryMedalsSectionProps) 
           };
           const flagSrc = getFlagSrc(theme.flagCode);
           const countryCode = getStickerCountryCode(medal.stickerCode);
-          const cardClassName = medal.earned
-            ? medal.repeated
-              ? "legendary-medal is-earned is-repeated"
-              : "legendary-medal is-earned"
-            : "legendary-medal is-locked";
+          const isActive = index === activeIndex;
 
           return (
-            <article
+            <motion.article
               key={medal.id}
-              className={cardClassName}
-              style={
-                {
-                  "--medal-primary": theme.primary,
-                  "--medal-secondary": theme.secondary,
-                  "--medal-accent": theme.accent
-                } as CSSProperties
-              }
+              data-medal-slide
+              animate={{
+                scale: isActive ? 1 : 0.94,
+                opacity: isActive ? 1 : 0.72
+              }}
+              transition={{ type: "spring", stiffness: 320, damping: 28 }}
+              className="grid w-[min(100%,15.5rem)] shrink-0 snap-center justify-items-center gap-3"
             >
-              <div className="legendary-panini-sticker">
+              <div
+                className={cn(
+                  "legendary-panini-sticker transition-shadow duration-300",
+                  medal.earned && !medal.repeated && "shadow-[0_16px_40px_rgba(16,185,129,0.25)]",
+                  medal.repeated && "holo-border shadow-[0_16px_40px_rgba(246,196,83,0.25)]",
+                  !medal.earned && "opacity-90"
+                )}
+                style={
+                  {
+                    "--medal-primary": theme.primary,
+                    "--medal-secondary": theme.secondary,
+                    "--medal-accent": theme.accent
+                  } as CSSProperties
+                }
+              >
                 <div className="legendary-panini-art">
                   <span className="legendary-panini-bg-num legendary-panini-bg-num-left" aria-hidden="true">
                     2
@@ -168,6 +187,8 @@ export function LegendaryMedalsSection({ medals }: LegendaryMedalsSectionProps) 
                       <Lock size={22} aria-hidden="true" />
                     </div>
                   ) : null}
+
+                  {medal.earned ? <span className="legendary-panini-shine" aria-hidden="true" /> : null}
                 </div>
 
                 <div className="legendary-panini-footer">
@@ -184,37 +205,38 @@ export function LegendaryMedalsSection({ medals }: LegendaryMedalsSectionProps) 
                 </div>
               </div>
 
-              <p className={medal.earned ? "legendary-medal-status is-earned" : "legendary-medal-status"}>
+              <p
+                className={cn(
+                  "text-center text-sm font-extrabold",
+                  medal.earned ? "text-emerald-300" : "text-white/55"
+                )}
+              >
                 {getMedalStatusLabel(medal)}
               </p>
 
               {medal.repeated ? (
-                <span className="legendary-medal-repeated">
+                <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/35 bg-amber-500/15 px-3 py-1 text-xs font-extrabold text-amber-100">
                   <Star size={14} aria-hidden="true" />
                   Repetida
                 </span>
               ) : null}
-            </article>
+            </motion.article>
           );
         })}
       </div>
 
-      <div className="legendary-medals-pagination" aria-hidden="true">
+      <div className="flex flex-wrap justify-center gap-2 px-4 pb-4" aria-hidden="true">
         {sortedMedals.map((medal, index) => (
           <span
             key={medal.id}
-            className={
-              index === activeIndex
-                ? medal.earned
-                  ? "legendary-medals-dot is-active is-earned"
-                  : "legendary-medals-dot is-active"
-                : medal.earned
-                  ? "legendary-medals-dot is-earned"
-                  : "legendary-medals-dot"
-            }
+            className={cn(
+              "h-2 rounded-full transition-all duration-200",
+              index === activeIndex ? "w-6 bg-panini-gold" : "w-2 bg-white/20",
+              medal.earned && index !== activeIndex && "bg-emerald-400/60"
+            )}
           />
         ))}
       </div>
-    </section>
+    </AppCard>
   );
 }
