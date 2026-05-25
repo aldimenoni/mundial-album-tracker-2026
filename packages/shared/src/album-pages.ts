@@ -155,3 +155,64 @@ export function getSpreadSummary(stickers: UserStickerDto[]): {
     total: stickers.length
   };
 }
+
+export function getWorldCupGroupLabelForTeam(team: string | null | undefined): string | null {
+  if (!team) {
+    return null;
+  }
+
+  return WORLD_CUP_GROUPS.find((group) => group.teams.includes(team))?.label ?? null;
+}
+
+export function getWorldCupGroupTeamOrder(groupLabel: string): string[] {
+  return WORLD_CUP_GROUPS.find((group) => group.label === groupLabel)?.teams ?? [];
+}
+
+export function getRepeatedStickerAlbumSectionLabel(
+  sticker: Pick<UserStickerDto["sticker"], "team" | "section" | "number">
+): string {
+  const worldCupGroup = getWorldCupGroupLabelForTeam(sticker.team);
+  if (worldCupGroup) {
+    return worldCupGroup;
+  }
+
+  if (sticker.section === "Coca-Cola" || sticker.team === "Coca-Cola") {
+    return COCA_COLA_FILTER_LABEL;
+  }
+
+  if (sticker.section === "World Cup History") {
+    const number = sticker.number ?? -1;
+
+    if (number >= 1 && number <= 8) {
+      return HISTORY_1_FILTER_LABEL;
+    }
+
+    if (number >= 9 && number <= 19) {
+      return HISTORY_2_FILTER_LABEL;
+    }
+  }
+
+  if (sticker.section === "Panini") {
+    return HISTORY_1_FILTER_LABEL;
+  }
+
+  return sticker.team ?? sticker.section ?? "Otros";
+}
+
+export function getRepeatedStickerAlbumSectionOrder(): string[] {
+  return [
+    HISTORY_1_FILTER_LABEL,
+    ...WORLD_CUP_GROUPS.map((group) => group.label),
+    HISTORY_2_FILTER_LABEL,
+    COCA_COLA_FILTER_LABEL,
+    "Otros"
+  ];
+}
+
+export function sortRepeatedStickersByAlbum(stickers: UserStickerDto[]): UserStickerDto[] {
+  return [...stickers].sort(
+    (left, right) =>
+      left.sticker.orderIndex - right.sticker.orderIndex ||
+      left.sticker.code.localeCompare(right.sticker.code, "es")
+  );
+}

@@ -6,6 +6,7 @@ import {
   getSpreadStickers,
   getSpreadSummary,
   getSpreadVisualTheme,
+  getTeamDisplayLabel,
   type UpdateUserStickerPayload,
   type UserStickerDto
 } from "@mundial-album/shared";
@@ -88,6 +89,10 @@ export function AlbumSpreadViewer({
     return null;
   }
 
+  const teamDisplayLabel = currentPage.spread.team
+    ? getTeamDisplayLabel(currentPage.spread.team)
+    : null;
+
   return (
     <section className="album-spread album-spread-swipeable" {...swipeHandlers}>
       <TeamFilter
@@ -101,7 +106,7 @@ export function AlbumSpreadViewer({
       <div className="album-spread-panel work-panel spread-themed" style={spreadStyle}>
         <SpreadHero
           theme={spreadTheme}
-          title={currentPage.spread.title}
+          title={teamDisplayLabel?.spanish ?? currentPage.spread.title}
           groupLabel={currentPage.spread.groupLabel}
           owned={summary.owned}
           total={summary.total}
@@ -109,6 +114,9 @@ export function AlbumSpreadViewer({
           canGoNext={safePageIndex < spreadPages.length - 1}
           onPrevious={goToPreviousPage}
           onNext={goToNextPage}
+          {...(teamDisplayLabel && teamDisplayLabel.english !== teamDisplayLabel.spanish
+            ? { subtitle: teamDisplayLabel.english }
+            : {})}
         />
 
         <StickerGrid

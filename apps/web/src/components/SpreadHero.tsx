@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 type SpreadHeroProps = {
   theme: SpreadVisualTheme;
   title: string;
+  subtitle?: string;
   groupLabel?: string | undefined;
   owned: number;
   total: number;
@@ -18,6 +19,7 @@ type SpreadHeroProps = {
 export function SpreadHero({
   theme,
   title,
+  subtitle,
   groupLabel,
   owned,
   total,
@@ -63,7 +65,10 @@ export function SpreadHero({
               <img className="spread-hero-badge" src={badgeSrc} alt="" loading="lazy" />
             </div>
           ) : null}
-          <h2>{title}</h2>
+          <div className="spread-hero-title-copy">
+            <h2>{title}</h2>
+            {subtitle ? <p className="spread-hero-subtitle">{subtitle}</p> : null}
+          </div>
         </div>
 
         <p className="spread-hero-progress">

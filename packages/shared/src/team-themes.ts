@@ -65,6 +65,68 @@ const TEAM_THEMES: Record<string, TeamTheme> = {
   Panama: { flagCode: "pa", primary: "#005293", secondary: "#004074", accent: "#d21034" }
 };
 
+export type TeamDisplayLabel = {
+  spanish: string;
+  english: string;
+};
+
+// Nombres del header de cada selección según el álbum Panini FIFA World Cup 2026.
+// Español: edición LATAM / nombres del álbum en español.
+// Inglés: títulos oficiales de la checklist Panini (secciones de 20 figuritas).
+const TEAM_DISPLAY_LABELS: Record<string, TeamDisplayLabel> = {
+  Mexico: { spanish: "Mexico", english: "Mexico" },
+  Sudafrica: { spanish: "Sudafrica", english: "South Africa" },
+  "Corea del Sur": { spanish: "Corea del Sur", english: "Korea Republic" },
+  Chequia: { spanish: "Chequia", english: "Czechia" },
+  Canada: { spanish: "Canada", english: "Canada" },
+  "Bosnia y Herzegovina": {
+    spanish: "Bosnia y Herzegovina",
+    english: "Bosnia and Herzegovina"
+  },
+  Qatar: { spanish: "Qatar", english: "Qatar" },
+  Suiza: { spanish: "Suiza", english: "Switzerland" },
+  Brasil: { spanish: "Brasil", english: "Brazil" },
+  Marruecos: { spanish: "Marruecos", english: "Morocco" },
+  Haiti: { spanish: "Haiti", english: "Haiti" },
+  Escocia: { spanish: "Escocia", english: "Scotland" },
+  "Estados Unidos": { spanish: "Estados Unidos", english: "United States" },
+  Paraguay: { spanish: "Paraguay", english: "Paraguay" },
+  Australia: { spanish: "Australia", english: "Australia" },
+  Turquia: { spanish: "Turquia", english: "Türkiye" },
+  Alemania: { spanish: "Alemania", english: "Germany" },
+  Curazao: { spanish: "Curazao", english: "Curaçao" },
+  "Costa de Marfil": { spanish: "Costa de Marfil", english: "Côte d'Ivoire" },
+  Ecuador: { spanish: "Ecuador", english: "Ecuador" },
+  "Paises Bajos": { spanish: "Paises Bajos", english: "Netherlands" },
+  Japon: { spanish: "Japon", english: "Japan" },
+  Suecia: { spanish: "Suecia", english: "Sweden" },
+  Tunez: { spanish: "Tunez", english: "Tunisia" },
+  Belgica: { spanish: "Belgica", english: "Belgium" },
+  Egipto: { spanish: "Egipto", english: "Egypt" },
+  Iran: { spanish: "Iran", english: "Iran" },
+  "Nueva Zelanda": { spanish: "Nueva Zelanda", english: "New Zealand" },
+  España: { spanish: "España", english: "Spain" },
+  "Cabo Verde": { spanish: "Cabo Verde", english: "Cabo Verde" },
+  "Arabia Saudita": { spanish: "Arabia Saudita", english: "Saudi Arabia" },
+  Uruguay: { spanish: "Uruguay", english: "Uruguay" },
+  Francia: { spanish: "Francia", english: "France" },
+  Senegal: { spanish: "Senegal", english: "Senegal" },
+  Irak: { spanish: "Irak", english: "Iraq" },
+  Noruega: { spanish: "Noruega", english: "Norway" },
+  Argentina: { spanish: "Argentina", english: "Argentina" },
+  Argelia: { spanish: "Argelia", english: "Algeria" },
+  Austria: { spanish: "Austria", english: "Austria" },
+  Jordania: { spanish: "Jordania", english: "Jordan" },
+  Portugal: { spanish: "Portugal", english: "Portugal" },
+  "RD Congo": { spanish: "RD Congo", english: "Congo DR" },
+  Uzbekistan: { spanish: "Uzbekistan", english: "Uzbekistan" },
+  Colombia: { spanish: "Colombia", english: "Colombia" },
+  Inglaterra: { spanish: "Inglaterra", english: "England" },
+  Croacia: { spanish: "Croacia", english: "Croatia" },
+  Ghana: { spanish: "Ghana", english: "Ghana" },
+  Panama: { spanish: "Panama", english: "Panama" }
+};
+
 const INTRO_THEME: SpreadVisualTheme = {
   primary: "#0b1f4b",
   secondary: "#163a8a",
@@ -83,6 +145,10 @@ const COCA_COLA_THEME: SpreadVisualTheme = {
 
 export function getTeamTheme(team: string): TeamTheme | null {
   return TEAM_THEMES[team] ?? null;
+}
+
+export function getTeamDisplayLabel(team: string): TeamDisplayLabel {
+  return TEAM_DISPLAY_LABELS[team] ?? { spanish: team, english: team };
 }
 
 export function getSpreadVisualTheme(input: {

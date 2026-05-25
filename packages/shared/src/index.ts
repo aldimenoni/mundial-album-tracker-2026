@@ -107,7 +107,6 @@ export {
   EXCHANGE_STATUS_LABELS,
   EXCHANGE_TYPES,
   EXCHANGE_TYPE_LABELS,
-  buildExchangeBalancePreview,
   type CreateExchangePayload,
   type ExchangeAnalysisDto,
   type ExchangeProposalDto,
@@ -122,9 +121,14 @@ export {
   getAlbumSpreadFilterGroups,
   getAlbumSpreadFilterOptions,
   getAlbumTeamNames,
+  getRepeatedStickerAlbumSectionLabel,
+  getRepeatedStickerAlbumSectionOrder,
   getSpreadFilterValue,
   getSpreadStickers,
   getSpreadSummary,
+  getWorldCupGroupLabelForTeam,
+  getWorldCupGroupTeamOrder,
+  sortRepeatedStickersByAlbum,
   HISTORY_1_FILTER_LABEL,
   HISTORY_2_FILTER_LABEL,
   INTRO_SPREAD_FILTER_LABEL,
@@ -134,7 +138,9 @@ export {
 export {
   getFlagSrc,
   getSpreadVisualTheme,
+  getTeamDisplayLabel,
   getTeamTheme,
   type SpreadVisualTheme,
+  type TeamDisplayLabel,
   type TeamTheme
 } from "./team-themes.js";
