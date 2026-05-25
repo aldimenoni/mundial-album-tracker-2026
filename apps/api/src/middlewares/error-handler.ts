@@ -29,6 +29,14 @@ export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
       return;
     }
 
+    if (error.code === "P2028") {
+      res.status(503).json({
+        message: "El intercambio tardó demasiado en procesarse. Intentá de nuevo.",
+        code: error.code
+      });
+      return;
+    }
+
     res.status(400).json({ message: "Database request failed", code: error.code });
     return;
   }

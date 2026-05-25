@@ -40,6 +40,24 @@ type ExchangeSnapshot = {
   notes: string;
 };
 
+const EXCHANGE_TRANSACTION_OPTIONS = {
+  maxWait: 10_000,
+  timeout: 30_000
+} as const;
+
+type MutableUserSticker = {
+  id: string | null;
+  userId: string;
+  stickerId: string;
+  quantityOwned: number;
+  quantityRepeated: number;
+  dirty: boolean;
+};
+
+function userStickerKey(userId: string, stickerId: string): string {
+  return `${userId}:${stickerId}`;
+}
+
 async function assertDistinctUsers(fromUserId: string, toUserId: string): Promise<void> {
   if (fromUserId === toUserId) {
     throw new HttpError(400, "No podés crear un intercambio con el mismo usuario.");
@@ -204,107 +222,78 @@ function validateAndBuildFinalizeSelection(
   );
 }
 
-async function getTrackedUserSticker(
-  tx: Prisma.TransactionClient,
+function applyGiveToState(state: MutableUserSticker, stickerCode: string): void {
+  try {
+    const nextCounts = computeGiveTransfer({
+      quantityOwned: state.quantityOwned,
+      quantityRepeated: state.quantityRepeated
+    });
+
+    state.quantityOwned = nextCounts.quantityOwned;
+    state.quantityRepeated = nextCounts.quantityRepeated;
+    state.dirty = true;
+  } catch {
+    throw new HttpError(409, `No hay repetida disponible para ${stickerCode}.`);
+  }
+}
+
+function applyReceiveToState(
+  stateMap: Map<string, MutableUserSticker>,
+  userId: string,
+  stickerId: string,
+  stickerCode: string
+): void {
+  const key = userStickerKey(userId, stickerId);
+  const existing = stateMap.get(key);
+
+  if (!existing) {
+    stateMap.set(key, {
+      id: null,
+      userId,
+      stickerId,
+      quantityOwned: 1,
+      quantityRepeated: 0,
+      dirty: true
+    });
+    return;
+  }
+
+  try {
+    const nextCounts = computeReceiveTransfer({
+      quantityOwned: existing.quantityOwned,
+      quantityRepeated: existing.quantityRepeated
+    });
+
+    existing.quantityOwned = nextCounts.quantityOwned;
+    existing.quantityRepeated = nextCounts.quantityRepeated;
+    existing.dirty = true;
+  } catch {
+    throw new HttpError(409, `La figurita ${stickerCode} ya está pegada para este usuario.`);
+  }
+}
+
+function requireGiveState(
+  stateMap: Map<string, MutableUserSticker>,
+  stickerByCode: Map<string, { id: string; code: string }>,
   userId: string,
   stickerCode: string
-) {
-  const sticker = await tx.sticker.findUnique({ where: { code: stickerCode } });
+): MutableUserSticker {
+  const sticker = stickerByCode.get(stickerCode);
 
   if (!sticker) {
     throw new HttpError(404, `Figurita ${stickerCode} no encontrada.`);
   }
 
-  const userSticker = await tx.userSticker.findUnique({
-    where: {
-      userId_stickerId: {
-        userId,
-        stickerId: sticker.id
-      }
-    }
-  });
+  const state = stateMap.get(userStickerKey(userId, sticker.id));
 
-  if (!userSticker) {
+  if (!state) {
     throw new HttpError(
       409,
       `El álbum no tiene cargada la figurita ${stickerCode} para este usuario.`
     );
   }
 
-  return { sticker, userSticker };
-}
-
-async function applyGiveSticker(
-  tx: Prisma.TransactionClient,
-  userId: string,
-  stickerCode: string
-): Promise<void> {
-  const { userSticker } = await getTrackedUserSticker(tx, userId, stickerCode);
-
-  let nextCounts;
-
-  try {
-    nextCounts = computeGiveTransfer({
-      quantityOwned: userSticker.quantityOwned,
-      quantityRepeated: userSticker.quantityRepeated
-    });
-  } catch {
-    throw new HttpError(409, `No hay repetida disponible para ${stickerCode}.`);
-  }
-
-  await tx.userSticker.update({
-    where: { id: userSticker.id },
-    data: nextCounts
-  });
-}
-
-async function applyReceiveSticker(
-  tx: Prisma.TransactionClient,
-  userId: string,
-  stickerCode: string
-): Promise<void> {
-  const sticker = await tx.sticker.findUnique({ where: { code: stickerCode } });
-
-  if (!sticker) {
-    throw new HttpError(404, `Figurita ${stickerCode} no encontrada.`);
-  }
-
-  const userSticker = await tx.userSticker.findUnique({
-    where: {
-      userId_stickerId: {
-        userId,
-        stickerId: sticker.id
-      }
-    }
-  });
-
-  if (!userSticker) {
-    await tx.userSticker.create({
-      data: {
-        userId,
-        stickerId: sticker.id,
-        quantityOwned: 1,
-        quantityRepeated: 0
-      }
-    });
-    return;
-  }
-
-  let nextCounts;
-
-  try {
-    nextCounts = computeReceiveTransfer({
-      quantityOwned: userSticker.quantityOwned,
-      quantityRepeated: userSticker.quantityRepeated
-    });
-  } catch {
-    throw new HttpError(409, `La figurita ${stickerCode} ya está pegada para este usuario.`);
-  }
-
-  await tx.userSticker.update({
-    where: { id: userSticker.id },
-    data: nextCounts
-  });
+  return state;
 }
 
 async function applyExchangeTransfers(
@@ -313,19 +302,85 @@ async function applyExchangeTransfers(
   toUserId: string,
   snapshot: Pick<ExchangeSnapshot, "stickersGivenByMe" | "stickersGivenByOther">
 ): Promise<void> {
+  const allCodes = [
+    ...new Set([...snapshot.stickersGivenByMe, ...snapshot.stickersGivenByOther])
+  ];
+
+  if (allCodes.length === 0) {
+    return;
+  }
+
+  const stickers = await tx.sticker.findMany({
+    where: { code: { in: allCodes } }
+  });
+  const stickerByCode = new Map(stickers.map((sticker) => [sticker.code, sticker]));
+
+  for (const code of allCodes) {
+    if (!stickerByCode.has(code)) {
+      throw new HttpError(404, `Figurita ${code} no encontrada.`);
+    }
+  }
+
+  const existingRows = await tx.userSticker.findMany({
+    where: {
+      userId: { in: [fromUserId, toUserId] },
+      stickerId: { in: stickers.map((sticker) => sticker.id) }
+    }
+  });
+  const stateMap = new Map<string, MutableUserSticker>(
+    existingRows.map((row) => [
+      userStickerKey(row.userId, row.stickerId),
+      {
+        id: row.id,
+        userId: row.userId,
+        stickerId: row.stickerId,
+        quantityOwned: row.quantityOwned,
+        quantityRepeated: row.quantityRepeated,
+        dirty: false
+      }
+    ])
+  );
+
   for (const code of snapshot.stickersGivenByMe) {
-    await applyGiveSticker(tx, fromUserId, code);
-    await applyReceiveSticker(tx, toUserId, code);
+    applyGiveToState(requireGiveState(stateMap, stickerByCode, fromUserId, code), code);
+    const sticker = stickerByCode.get(code)!;
+    applyReceiveToState(stateMap, toUserId, sticker.id, code);
   }
 
   for (const code of snapshot.stickersGivenByOther) {
-    await applyGiveSticker(tx, toUserId, code);
-    await applyReceiveSticker(tx, fromUserId, code);
+    applyGiveToState(requireGiveState(stateMap, stickerByCode, toUserId, code), code);
+    const sticker = stickerByCode.get(code)!;
+    applyReceiveToState(stateMap, fromUserId, sticker.id, code);
   }
 
+  const dirtyStates = [...stateMap.values()].filter((state) => state.dirty);
+
+  await Promise.all(
+    dirtyStates.map((state) =>
+      state.id
+        ? tx.userSticker.update({
+            where: { id: state.id },
+            data: {
+              quantityOwned: state.quantityOwned,
+              quantityRepeated: state.quantityRepeated
+            }
+          })
+        : tx.userSticker.create({
+            data: {
+              userId: state.userId,
+              stickerId: state.stickerId,
+              quantityOwned: state.quantityOwned,
+              quantityRepeated: state.quantityRepeated
+            }
+          })
+    )
+  );
+
   const activityAt = new Date();
-  await touchLastAlbumActivity(fromUserId, activityAt, tx);
-  await touchLastAlbumActivity(toUserId, activityAt, tx);
+  await Promise.all([
+    touchLastAlbumActivity(fromUserId, activityAt, tx),
+    touchLastAlbumActivity(toUserId, activityAt, tx)
+  ]);
 }
 
 async function closeOpenSettlementBetweenUsers(
@@ -495,7 +550,7 @@ export async function executeExchange(
         notes: snapshot.notes
       }
     });
-  });
+  }, EXCHANGE_TRANSACTION_OPTIONS);
 
   const [fromUserSummary, toUserSummary] = await Promise.all([
     getAlbumSummary(input.fromUserId),
@@ -633,7 +688,7 @@ export async function finalizeExchange(
         pendingCountForOther: nextPending.pendingCountForOther
       }
     });
-  });
+  }, EXCHANGE_TRANSACTION_OPTIONS);
 
   const [fromUserSummary, toUserSummary] = await Promise.all([
     getAlbumSummary(existing.fromUserId),
