@@ -8,13 +8,14 @@ datasource db {
 }
 
 model User {
-  id                 String              @id @default(uuid())
-  name               String              @unique
-  stickers           UserSticker[]
-  exchangesFrom      ExchangeProposal[]  @relation("ExchangesFrom")
-  exchangesTo        ExchangeProposal[]  @relation("ExchangesTo")
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
+  id                   String              @id @default(uuid())
+  name                 String              @unique
+  stickers             UserSticker[]
+  exchangesFrom        ExchangeProposal[]  @relation("ExchangesFrom")
+  exchangesTo          ExchangeProposal[]  @relation("ExchangesTo")
+  lastAlbumActivityAt  DateTime?
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
 }
 
 model Sticker {
@@ -43,10 +44,12 @@ model UserSticker {
   quantityRepeated Int      @default(0)
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   sticker          Sticker  @relation(fields: [stickerId], references: [id], onDelete: Cascade)
+  updatedAt        DateTime @updatedAt
 
   @@unique([userId, stickerId])
   @@index([userId])
   @@index([stickerId])
+  @@index([userId, updatedAt])
 }
 
 enum StickerType {

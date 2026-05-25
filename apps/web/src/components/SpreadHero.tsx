@@ -8,6 +8,7 @@ type SpreadHeroProps = {
   title: string;
   subtitle?: string;
   groupLabel?: string | undefined;
+  pageLabel?: string;
   owned: number;
   total: number;
   canGoPrevious?: boolean;
@@ -21,6 +22,7 @@ export function SpreadHero({
   title,
   subtitle,
   groupLabel,
+  pageLabel,
   owned,
   total,
   canGoPrevious = false,
@@ -58,6 +60,7 @@ export function SpreadHero({
 
       <div className="spread-hero-center">
         {groupLabel ? <p className="spread-hero-group">{groupLabel}</p> : null}
+        {pageLabel ? <p className="spread-hero-page">{pageLabel}</p> : null}
 
         <div className="spread-hero-title-row">
           {badgeSrc ? (

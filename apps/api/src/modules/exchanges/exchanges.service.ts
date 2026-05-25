@@ -8,7 +8,7 @@ import type { ExchangeProposal, Prisma, User } from "@prisma/client";
 import { prisma } from "../../config/prisma.js";
 import { toUserDto } from "../../utils/dto.js";
 import { HttpError } from "../../utils/http-error.js";
-import { getAlbum, getAlbumSummary } from "../albums/albums.service.js";
+import { getAlbum, getAlbumSummary, touchLastAlbumActivity } from "../albums/albums.service.js";
 import { buildCompareAlbumDto } from "./exchange.mapper.js";
 import {
   isValidAllOneToOneSelection,
@@ -311,6 +311,10 @@ async function applyExchangeTransfers(
     await applyGiveSticker(tx, toUserId, code);
     await applyReceiveSticker(tx, fromUserId, code);
   }
+
+  const activityAt = new Date();
+  await touchLastAlbumActivity(fromUserId, activityAt, tx);
+  await touchLastAlbumActivity(toUserId, activityAt, tx);
 }
 
 async function closeOpenSettlementBetweenUsers(

@@ -8,6 +8,7 @@
     "dev": "prisma generate && tsx watch src/server.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
+    "prisma:deploy": "tsx prisma/run-migrate-deploy.ts",
     "seed": "prisma db seed",
     "seed:exchange-demo": "tsx prisma/seed-exchange-demo.ts",
     "seed:exchange-many-demo": "tsx prisma/seed-exchange-many-demo.ts",

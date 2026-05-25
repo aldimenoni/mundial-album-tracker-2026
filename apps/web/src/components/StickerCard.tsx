@@ -7,6 +7,7 @@ type StickerCardProps = {
   item: UserStickerDto;
   editable?: boolean;
   compact?: boolean;
+  showTypeIcon?: boolean;
   onUpdate?: ((stickerId: string, payload: UpdateUserStickerPayload) => Promise<void>) | undefined;
 };
 
@@ -29,7 +30,13 @@ function StickerTypeIcon({ type }: { type: StickerType }) {
   return null;
 }
 
-export function StickerCard({ item, editable = false, compact = false, onUpdate }: StickerCardProps) {
+export function StickerCard({
+  item,
+  editable = false,
+  compact = false,
+  showTypeIcon = true,
+  onUpdate
+}: StickerCardProps) {
   const [isSaving, setIsSaving] = useState(false);
 
   async function handleUpdate(payload: UpdateUserStickerPayload): Promise<void> {
@@ -62,7 +69,7 @@ export function StickerCard({ item, editable = false, compact = false, onUpdate 
       <div className="sticker-card-body">
         <p>
           {item.sticker.playerName ?? "Sin nombre"}
-          <StickerTypeIcon type={item.sticker.type} />
+          {showTypeIcon ? <StickerTypeIcon type={item.sticker.type} /> : null}
         </p>
       </div>
 

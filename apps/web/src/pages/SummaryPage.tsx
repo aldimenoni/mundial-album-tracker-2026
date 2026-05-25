@@ -3,7 +3,9 @@ import type { AlbumSummaryDto, UserStickerDto } from "@mundial-album/shared";
 import { api } from "../api/client";
 import { getErrorMessage } from "../api/error-message";
 import { AlbumSummaryCard } from "../components/AlbumSummaryCard";
+import { LegendaryMedalsSection } from "../components/LegendaryMedalsSection";
 import { RepeatedStickersModal } from "../components/RepeatedStickersModal";
+import { SpreadProgressList } from "../components/SpreadProgressList";
 import { useRequiredUser } from "../state/user-store";
 import { subscribeAlbumUpdated } from "../utils/album-events";
 
@@ -70,7 +72,11 @@ export function SummaryPage() {
       ) : null}
       {isLoading ? <p className="empty-state">Calculando resumen...</p> : null}
       {summary ? (
-        <AlbumSummaryCard summary={summary} onRepeatedClick={() => void openRepeatedModal()} />
+        <>
+          <AlbumSummaryCard summary={summary} onRepeatedClick={() => void openRepeatedModal()} />
+          <LegendaryMedalsSection medals={summary.legendaryMedals} />
+          <SpreadProgressList spreads={summary.spreadProgress} />
+        </>
       ) : null}
 
       <RepeatedStickersModal

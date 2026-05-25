@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Repeat2, Search } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { StickerDto, StickerMissingExchangeHint, StickerMissingUsersDto } from "@mundial-album/shared";
+import { formatStickerAlbumLocation } from "@mundial-album/shared";
 import { api } from "../api/client";
 import { getErrorMessage } from "../api/error-message";
 import { useUser } from "../state/user-store";
@@ -146,6 +147,9 @@ export function StickerSearchPage() {
               <p className="sticker-search-meta">
                 {[selectedSticker?.playerName, selectedSticker?.team].filter(Boolean).join(" · ")}
               </p>
+            ) : null}
+            {selectedSticker ? (
+              <p className="sticker-search-meta">{formatStickerAlbumLocation(selectedSticker)}</p>
             ) : null}
           </div>
 

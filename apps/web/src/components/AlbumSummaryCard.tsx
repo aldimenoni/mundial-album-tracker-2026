@@ -38,6 +38,17 @@ function MetricCard({ metric }: { metric: SummaryMetric }) {
   );
 }
 
+function formatLastUpdatedAt(value: string | null): string {
+  if (!value) {
+    return "Sin cambios registrados";
+  }
+
+  return new Intl.DateTimeFormat("es-AR", {
+    dateStyle: "medium",
+    timeStyle: "short"
+  }).format(new Date(value));
+}
+
 export function AlbumSummaryCard({ summary, onRepeatedClick }: AlbumSummaryCardProps) {
   const metrics: SummaryMetric[] = [
     { label: "Total", value: summary.totalStickers, tone: "blue" },
@@ -66,6 +77,9 @@ export function AlbumSummaryCard({ summary, onRepeatedClick }: AlbumSummaryCardP
         <div>
           <p className="eyebrow">Resumen</p>
           <h2>{summary.user.name}</h2>
+          <p className="summary-last-updated">
+            Última actualización: {formatLastUpdatedAt(summary.lastUpdatedAt)}
+          </p>
         </div>
         <strong>{summary.completionPercentage}%</strong>
       </div>

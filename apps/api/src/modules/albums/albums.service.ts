@@ -1,5 +1,6 @@
 import type { AlbumDto, AlbumSummaryDto } from "@mundial-album/shared";
-import type { UserSticker } from "@prisma/client";
+import { buildAlbumSpreadProgress, buildLegendaryMedals } from "@mundial-album/shared";
+import type { Prisma, UserSticker } from "@prisma/client";
 import { prisma } from "../../config/prisma.js";
 import { toUserDto, toUserStickerDto } from "../../utils/dto.js";
 import { HttpError } from "../../utils/http-error.js";
@@ -42,6 +43,31 @@ function normalizeStickerUpdate(
     quantityOwned: normalizedOwned,
     quantityRepeated: normalizedOwned === 0 ? 0 : quantityRepeated
   };
+}
+
+function isAlbumPasteActivity(
+  normalized: NormalizedStickerUpdate,
+  existing: StickerCounts
+): boolean {
+  const previousOwned = existing?.quantityOwned ?? 0;
+  const previousRepeated = existing?.quantityRepeated ?? 0;
+
+  return (
+    normalized.quantityOwned > previousOwned || normalized.quantityRepeated > previousRepeated
+  );
+}
+
+export async function touchLastAlbumActivity(
+  userId: string,
+  at: Date = new Date(),
+  tx?: Prisma.TransactionClient
+): Promise<void> {
+  const client = tx ?? prisma;
+
+  await client.user.update({
+    where: { id: userId },
+    data: { lastAlbumActivityAt: at }
+  });
 }
 
 
@@ -95,27 +121,42 @@ export async function updateAlbumSticker(
   }
 
   const normalized = normalizeStickerUpdate(input, existing);
+  const shouldTrackActivity = isAlbumPasteActivity(normalized, existing);
 
-  const userSticker = await prisma.userSticker.upsert({
-    where: {
-      userId_stickerId: {
+  const userSticker = await prisma.$transaction(async (tx) => {
+    const record = await tx.userSticker.upsert({
+      where: {
+        userId_stickerId: {
+          userId,
+          stickerId
+        }
+      },
+      update: normalized,
+      create: {
         userId,
-        stickerId
+        stickerId,
+        ...normalized
       }
-    },
-    update: normalized,
-    create: {
-      userId,
-      stickerId,
-      ...normalized
+    });
+
+    if (shouldTrackActivity) {
+      await touchLastAlbumActivity(userId, new Date(), tx);
     }
+
+    return record;
   });
 
   return toUserStickerDto(sticker, userSticker);
 }
 
 export async function getAlbumSummary(userId: string): Promise<AlbumSummaryDto> {
-  const album = await getAlbum(userId);
+  const [album, userActivity] = await Promise.all([
+    getAlbum(userId),
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: { lastAlbumActivityAt: true }
+    })
+  ]);
   const totalStickers = album.stickers.length;
   const totalOwned = album.stickers.filter((item) => item.quantityOwned > 0).length;
   const totalRepeated = album.stickers.reduce(
@@ -144,6 +185,9 @@ export async function getAlbumSummary(userId: string): Promise<AlbumSummaryDto> 
       totalStickers === 0 ? 0 : Number(((totalOwned / totalStickers) * 100).toFixed(2)),
     totalCocaCola,
     missingCocaCola,
-    repeatedCocaCola
+    repeatedCocaCola,
+    spreadProgress: buildAlbumSpreadProgress(album.stickers),
+    legendaryMedals: buildLegendaryMedals(album.stickers),
+    lastUpdatedAt: userActivity?.lastAlbumActivityAt?.toISOString() ?? null
   };
 }

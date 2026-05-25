@@ -5,6 +5,7 @@ type StickerGridProps = {
   items: UserStickerDto[];
   editable?: boolean;
   compact?: boolean;
+  showTypeIcon?: boolean;
   emptyMessage?: string;
   onUpdate?: ((stickerId: string, payload: UpdateUserStickerPayload) => Promise<void>) | undefined;
 };
@@ -13,6 +14,7 @@ export function StickerGrid({
   items,
   editable = false,
   compact = false,
+  showTypeIcon = true,
   emptyMessage = "No hay figuritas para mostrar.",
   onUpdate
 }: StickerGridProps) {
@@ -28,6 +30,7 @@ export function StickerGrid({
           item={item}
           editable={editable}
           compact={compact}
+          showTypeIcon={showTypeIcon}
           onUpdate={onUpdate}
         />
       ))}

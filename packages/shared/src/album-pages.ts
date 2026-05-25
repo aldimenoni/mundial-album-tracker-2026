@@ -12,7 +12,7 @@ export type AlbumSpreadDefinition = {
   compact?: boolean;
 };
 
-const WORLD_CUP_GROUPS: Array<{ label: string; teams: string[] }> = [
+export const WORLD_CUP_GROUPS: Array<{ label: string; teams: string[] }> = [
   { label: "Grupo A", teams: ["Mexico", "Sudafrica", "Corea del Sur", "Chequia"] },
   { label: "Grupo B", teams: ["Canada", "Bosnia y Herzegovina", "Qatar", "Suiza"] },
   { label: "Grupo C", teams: ["Brasil", "Marruecos", "Haiti", "Escocia"] },

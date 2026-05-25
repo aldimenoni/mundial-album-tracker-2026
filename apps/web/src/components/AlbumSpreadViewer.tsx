@@ -1,7 +1,9 @@
 import type { CSSProperties } from "react";
 import {
   ALBUM_SPREADS,
+  formatAlbumPageRange,
   getAlbumSpreadFilterGroups,
+  getSpreadAlbumPageRange,
   getSpreadFilterValue,
   getSpreadStickers,
   getSpreadSummary,
@@ -92,6 +94,8 @@ export function AlbumSpreadViewer({
   const teamDisplayLabel = currentPage.spread.team
     ? getTeamDisplayLabel(currentPage.spread.team)
     : null;
+  const pageRange = getSpreadAlbumPageRange(currentPage.spread);
+  const pageLabel = pageRange ? formatAlbumPageRange(pageRange) : undefined;
 
   return (
     <section className="album-spread album-spread-swipeable" {...swipeHandlers}>
@@ -114,6 +118,7 @@ export function AlbumSpreadViewer({
           canGoNext={safePageIndex < spreadPages.length - 1}
           onPrevious={goToPreviousPage}
           onNext={goToNextPage}
+          {...(pageLabel ? { pageLabel } : {})}
           {...(teamDisplayLabel && teamDisplayLabel.english !== teamDisplayLabel.spanish
             ? { subtitle: teamDisplayLabel.english }
             : {})}
@@ -123,6 +128,7 @@ export function AlbumSpreadViewer({
           items={currentPage.stickers}
           editable={editable}
           compact={isCompactSpread}
+          showTypeIcon={!currentPage.spread.id.startsWith("historia-")}
           onUpdate={onUpdate}
         />
       </div>

@@ -49,6 +49,9 @@ export interface AlbumSummaryDto {
   totalCocaCola: number;
   missingCocaCola: number;
   repeatedCocaCola: number;
+  spreadProgress: import("./album-insights.js").AlbumSpreadProgressDto[];
+  legendaryMedals: import("./album-insights.js").LegendaryPlayerMedalDto[];
+  lastUpdatedAt: string | null;
 }
 
 export interface ExecuteExchangeResultDto {
@@ -107,6 +110,23 @@ export interface ApiErrorResponse {
   issues?: unknown;
 }
 
+export {
+  formatAlbumPageLabel,
+  formatAlbumPageRange,
+  formatStickerAlbumLocation,
+  getSpreadAlbumPageRange,
+  getStickerAlbumLocation,
+  getStickerAlbumPage,
+  getStickerAlbumSectionName
+} from "./album-page-numbers.js";
+export {
+  buildAlbumSpreadProgress,
+  buildLegendaryMedals,
+  LEGENDARY_PLAYERS,
+  type AlbumSpreadProgressDto,
+  type LegendaryPlayerDefinition,
+  type LegendaryPlayerMedalDto
+} from "./album-insights.js";
 export {
   albumHasMissingTrackedData,
   albumHasRepeatedStickers,
