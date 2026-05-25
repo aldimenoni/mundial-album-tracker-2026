@@ -11,7 +11,7 @@ import {
   getAlbumSummary,
   updateAlbumSticker
 } from "./albums.service.js";
-import { compareAlbums } from "./compare-albums.js";
+import { compareAlbums, listAlbumComparisons } from "./compare-albums.js";
 
 export const albumsRouter = Router();
 
@@ -40,6 +40,15 @@ albumsRouter.get(
     const { userId } = userIdParamSchema.parse(req.params);
     const summary = await getAlbumSummary(userId);
     res.json(summary);
+  })
+);
+
+albumsRouter.get(
+  "/:userId/comparisons",
+  asyncHandler(async (req, res) => {
+    const { userId } = userIdParamSchema.parse(req.params);
+    const comparisons = await listAlbumComparisons(userId);
+    res.json(comparisons);
   })
 );
 

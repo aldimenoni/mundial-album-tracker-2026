@@ -5,6 +5,7 @@ import { getTeamDisplayLabel } from "./team-themes.js";
 
 export interface AlbumSpreadProgressDto {
   spreadId: string;
+  team: string;
   label: string;
   subtitle: string | null;
   groupLabel: string | null;
@@ -123,6 +124,7 @@ export function buildAlbumSpreadProgress(stickers: UserStickerDto[]): AlbumSprea
 
     return {
       spreadId: spread.id,
+      team: spread.team!,
       label: getSpreadProgressLabel(spread),
       subtitle: getSpreadProgressSubtitle(spread),
       groupLabel: spread.groupLabel ?? null,

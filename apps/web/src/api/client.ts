@@ -123,6 +123,10 @@ export const api = {
     return request<AlbumSummaryDto>(`/albums/${userId}/summary`);
   },
 
+  listAlbumComparisons(userId: string): Promise<CompareAlbumDto[]> {
+    return request<CompareAlbumDto[]>(`/albums/${userId}/comparisons`);
+  },
+
   compareAlbums(myUserId: string, otherUserId: string): Promise<CompareAlbumDto> {
     return request<CompareAlbumDto>(`/albums/${myUserId}/compare/${otherUserId}`);
   },

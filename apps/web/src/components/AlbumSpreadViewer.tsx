@@ -12,7 +12,8 @@ import {
   type UpdateUserStickerPayload,
   type UserStickerDto
 } from "@mundial-album/shared";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useSwipeNavigation } from "../hooks/useSwipeNavigation";
 import { SpreadHero } from "./SpreadHero";
 import { StickerGrid } from "./StickerGrid";
@@ -29,6 +30,8 @@ export function AlbumSpreadViewer({
   editable = false,
   onUpdate
 }: AlbumSpreadViewerProps) {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialSpreadFilter = searchParams.get("cuadro");
   const [pageIndex, setPageIndex] = useState(0);
 
   const spreadFilterGroups = useMemo(() => getAlbumSpreadFilterGroups(), []);
@@ -76,6 +79,34 @@ export function AlbumSpreadViewer({
       setPageIndex(nextIndex);
     }
   }
+
+  useEffect(() => {
+    if (!initialSpreadFilter || spreadPages.length === 0) {
+      return;
+    }
+
+    const nextIndex = spreadPages.findIndex(
+      (page) => getSpreadFilterValue(page.spread) === initialSpreadFilter
+    );
+
+    if (nextIndex >= 0) {
+      setPageIndex(nextIndex);
+    }
+
+    setSearchParams(
+      (current) => {
+        const next = new URLSearchParams(current);
+
+        if (!next.has("cuadro")) {
+          return current;
+        }
+
+        next.delete("cuadro");
+        return next;
+      },
+      { replace: true }
+    );
+  }, [initialSpreadFilter, spreadPages, setSearchParams]);
 
   const swipeHandlers = useSwipeNavigation({
     enabled: spreadPages.length > 1,

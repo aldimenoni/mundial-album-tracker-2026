@@ -20,12 +20,7 @@ export function HomePage() {
     refetch
   } = useQuery(
     `compare-list:${currentUser.id}`,
-    async () => {
-      const users = await api.listUsers();
-      const otherUsers = users.filter((user) => user.id !== currentUser.id);
-
-      return Promise.all(otherUsers.map((user) => api.compareAlbums(currentUser.id, user.id)));
-    },
+    () => api.listAlbumComparisons(currentUser.id),
     { staleTime: 30_000 }
   );
   const [executingUserId, setExecutingUserId] = useState<string | null>(null);
@@ -76,18 +71,10 @@ export function HomePage() {
 
   return (
     <div className="stack">
-      <div className="page-heading">
-        <div>
-          <p className="eyebrow">Intercambio</p>
-          <h2>Intercambios</h2>
-          <p>Intercambios uno a uno sugeridos o personalizados con cada usuario.</p>
-          {isFetching && comparisons ? <p className="fetching-indicator">Actualizando...</p> : null}
-        </div>
-      </div>
-
       {error ? <p className="alert">{getErrorMessage(error)}</p> : null}
       {errorMessage ? <p className="alert">{errorMessage}</p> : null}
       {successMessage ? <p className="success-banner">{successMessage}</p> : null}
+      {isFetching && comparisons ? <p className="fetching-indicator">Actualizando...</p> : null}
       {isLoading && !comparisons ? <ExchangePageSkeleton /> : null}
 
       {!isLoading && comparisons && comparisons.length === 0 ? (

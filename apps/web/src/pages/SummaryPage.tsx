@@ -44,18 +44,11 @@ export function SummaryPage() {
 
   return (
     <section className="stack">
-      <div className="page-heading">
-        <div>
-          <p className="eyebrow">Home</p>
-          <h2>Resumen</h2>
-          {isFetching && summary ? <p className="fetching-indicator">Actualizando...</p> : null}
-        </div>
-      </div>
-
       {error ? <p className="alert">{getErrorMessage(error)}</p> : null}
       {repeatedErrorMessage && repeatedModalOpen ? (
         <p className="alert">{repeatedErrorMessage}</p>
       ) : null}
+      {isFetching && summary ? <p className="fetching-indicator">Actualizando...</p> : null}
       {isLoading && !summary ? <SummaryPageSkeleton /> : null}
       {summary ? (
         <>
