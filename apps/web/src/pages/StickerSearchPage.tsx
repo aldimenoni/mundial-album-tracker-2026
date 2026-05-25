@@ -1,10 +1,12 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import { Repeat2, Search } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { StickerDto, StickerMissingExchangeHint, StickerMissingUsersDto } from "@mundial-album/shared";
 import { formatStickerAlbumLocation } from "@mundial-album/shared";
 import { api } from "../api/client";
 import { getErrorMessage } from "../api/error-message";
+import { SearchPageSkeleton } from "../components/ui/Skeleton";
+import { useQuery } from "../hooks/useQuery";
 import { useUser } from "../state/user-store";
 
 function normalizeStickerCode(value: string): string {
@@ -26,10 +28,13 @@ function getExchangeHintLabel(hint: StickerMissingExchangeHint): string {
 
 export function StickerSearchPage() {
   const { currentUser } = useUser();
-  const [stickers, setStickers] = useState<StickerDto[]>([]);
+  const { data: stickers = [], error, isLoading: isLoadingCatalog } = useQuery(
+    "stickers:catalog",
+    () => api.listStickers(),
+    { staleTime: 10 * 60_000 }
+  );
   const [code, setCode] = useState("");
   const [result, setResult] = useState<StickerMissingUsersDto | null>(null);
-  const [isLoadingCatalog, setIsLoadingCatalog] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -37,24 +42,6 @@ export function StickerSearchPage() {
     () => new Map(stickers.map((sticker) => [sticker.code, sticker])),
     [stickers]
   );
-
-  useEffect(() => {
-    async function loadCatalog(): Promise<void> {
-      setIsLoadingCatalog(true);
-      setErrorMessage(null);
-
-      try {
-        const catalog = await api.listStickers();
-        setStickers(catalog);
-      } catch (error: unknown) {
-        setErrorMessage(getErrorMessage(error));
-      } finally {
-        setIsLoadingCatalog(false);
-      }
-    }
-
-    void loadCatalog();
-  }, []);
 
   async function handleSearch(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
@@ -81,8 +68,8 @@ export function StickerSearchPage() {
       const searchResult = await api.findUsersMissingSticker(normalizedCode, currentUser?.id);
       setResult(searchResult);
       setCode(normalizedCode);
-    } catch (error: unknown) {
-      setErrorMessage(getErrorMessage(error));
+    } catch (searchError: unknown) {
+      setErrorMessage(getErrorMessage(searchError));
     } finally {
       setIsSearching(false);
     }
@@ -90,6 +77,20 @@ export function StickerSearchPage() {
 
   const selectedSticker = result?.sticker ?? stickerByCode.get(normalizeStickerCode(code)) ?? null;
   const exchangeMatches = result?.users.filter((entry) => entry.exchangeHint).length ?? 0;
+
+  if (isLoadingCatalog && stickers.length === 0) {
+    return (
+      <section className="work-panel sticker-search-panel stack">
+        <div className="page-heading">
+          <div>
+            <p className="eyebrow">Consulta rápida</p>
+            <h2>Buscador de figuritas</h2>
+          </div>
+        </div>
+        <SearchPageSkeleton />
+      </section>
+    );
+  }
 
   return (
     <section className="work-panel sticker-search-panel">
@@ -115,7 +116,6 @@ export function StickerSearchPage() {
             autoCapitalize="characters"
             spellCheck={false}
             placeholder="ARG10"
-            disabled={isLoadingCatalog}
             onChange={(event) => {
               setCode(event.currentTarget.value.toUpperCase());
               setErrorMessage(null);
@@ -129,13 +129,13 @@ export function StickerSearchPage() {
           ))}
         </datalist>
 
-        <button className="primary-button sticker-search-button" type="submit" disabled={isSearching || isLoadingCatalog}>
+        <button className="primary-button sticker-search-button" type="submit" disabled={isSearching}>
           <Search size={18} aria-hidden="true" />
           {isSearching ? "Buscando..." : "Buscar"}
         </button>
       </form>
 
-      {isLoadingCatalog ? <p className="empty-state">Cargando códigos del álbum...</p> : null}
+      {error ? <p className="alert">{getErrorMessage(error)}</p> : null}
       {errorMessage ? <p className="alert">{errorMessage}</p> : null}
 
       {result ? (

@@ -2003,6 +2003,200 @@ a {
   }
 }
 
+@keyframes skeleton-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton {
+  animation: skeleton-shimmer 1.35s ease-in-out infinite;
+  background:
+    linear-gradient(90deg, rgba(226, 232, 240, 0.65) 25%, rgba(248, 250, 252, 0.95) 50%, rgba(226, 232, 240, 0.65) 75%);
+  background-size: 200% 100%;
+  display: block;
+  min-height: 12px;
+}
+
+.skeleton-rounded-sm {
+  border-radius: 8px;
+}
+
+.skeleton-rounded-md {
+  border-radius: 14px;
+}
+
+.skeleton-rounded-lg {
+  border-radius: 18px;
+}
+
+.skeleton-rounded-pill {
+  border-radius: 999px;
+}
+
+.skeleton-stack {
+  display: grid;
+  gap: 10px;
+}
+
+.skeleton-stack-tight {
+  gap: 8px;
+}
+
+.skeleton-line {
+  height: 14px;
+  width: 100%;
+}
+
+.skeleton-line-xs {
+  max-width: 88px;
+}
+
+.skeleton-line-sm {
+  max-width: 180px;
+}
+
+.skeleton-line-md {
+  max-width: 220px;
+}
+
+.skeleton-line-lg {
+  height: 28px;
+  max-width: 160px;
+}
+
+.skeleton-line-short {
+  width: 72%;
+}
+
+.skeleton-line-full {
+  width: 100%;
+}
+
+.skeleton-panel {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+}
+
+.skeleton-panel-tall {
+  min-height: 220px;
+}
+
+.skeleton-summary-header {
+  align-items: start;
+  display: flex;
+  justify-content: space-between;
+}
+
+.skeleton-circle {
+  height: 48px;
+  width: 48px;
+}
+
+.skeleton-circle-lg {
+  height: 56px;
+  width: 56px;
+}
+
+.skeleton-progress {
+  height: 10px;
+}
+
+.skeleton-metric-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.skeleton-metric-card {
+  height: 72px;
+}
+
+.skeleton-medal-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.skeleton-medal-card {
+  height: 132px;
+}
+
+.skeleton-list {
+  display: grid;
+  gap: 10px;
+}
+
+.skeleton-list-row {
+  height: 54px;
+}
+
+.skeleton-list-row-action {
+  height: 64px;
+}
+
+.skeleton-spread-panel {
+  gap: 16px;
+}
+
+.skeleton-spread-hero {
+  height: 112px;
+}
+
+.skeleton-sticker-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.skeleton-sticker-card {
+  height: 148px;
+}
+
+.skeleton-exchange-card {
+  min-height: 180px;
+}
+
+.skeleton-input {
+  height: 46px;
+}
+
+.skeleton-button {
+  height: 44px;
+}
+
+.page-shell.is-fetching {
+  opacity: 0.92;
+}
+
+.fetching-indicator {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+@media (min-width: 768px) {
+  .skeleton-metric-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .skeleton-medal-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .skeleton-sticker-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 @media (min-width: 1024px) {
   .page-shell {
     max-width: 1120px;

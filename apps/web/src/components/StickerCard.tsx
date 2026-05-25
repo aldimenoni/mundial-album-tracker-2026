@@ -1,6 +1,6 @@
 import type { StickerType, UpdateUserStickerPayload, UserStickerDto } from "@mundial-album/shared";
 import { Check, CopyPlus, Minus, Plus, Star, X } from "lucide-react";
-import { useState } from "react";
+import { memo, useState } from "react";
 import { StatusBadge } from "./StatusBadge";
 
 type StickerCardProps = {
@@ -30,7 +30,7 @@ function StickerTypeIcon({ type }: { type: StickerType }) {
   return null;
 }
 
-export function StickerCard({
+export const StickerCard = memo(function StickerCard({
   item,
   editable = false,
   compact = false,
@@ -157,4 +157,4 @@ export function StickerCard({
       ) : null}
     </article>
   );
-}
+});

@@ -1,38 +1,27 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useState } from "react";
 import { UserPlus, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import type { UserDto } from "@mundial-album/shared";
 import { api } from "../api/client";
 import { getErrorMessage } from "../api/error-message";
+import { UserListSkeleton } from "../components/ui/Skeleton";
+import { useQuery } from "../hooks/useQuery";
+import { invalidateQuery } from "../lib/query-cache";
 import { useUser } from "../state/user-store";
 
 export function UserSelectionPage() {
   const { currentUser, setCurrentUser } = useUser();
   const navigate = useNavigate();
-  const [users, setUsers] = useState<UserDto[]>([]);
+  const {
+    data: users = [],
+    error,
+    isLoading,
+    refetch
+  } = useQuery("users", () => api.listUsers(), { staleTime: 30_000 });
   const [nickname, setNickname] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  async function loadUsers(): Promise<void> {
-    setIsLoading(true);
-    setErrorMessage(null);
-
-    try {
-      const nextUsers = await api.listUsers();
-      setUsers(nextUsers);
-    } catch (error: unknown) {
-      setErrorMessage(getErrorMessage(error));
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    void loadUsers();
-  }, []);
 
   function closeCreateForm(): void {
     setShowCreateForm(false);
@@ -49,9 +38,10 @@ export function UserSelectionPage() {
       await api.createUser({ name: nickname });
       setNickname("");
       setShowCreateForm(false);
-      await loadUsers();
-    } catch (error: unknown) {
-      setErrorMessage(getErrorMessage(error));
+      invalidateQuery("users");
+      await refetch();
+    } catch (submitError: unknown) {
+      setErrorMessage(getErrorMessage(submitError));
     } finally {
       setIsSubmitting(false);
     }
@@ -78,6 +68,7 @@ export function UserSelectionPage() {
         ) : null}
       </div>
 
+      {error ? <p className="alert">{getErrorMessage(error)}</p> : null}
       {errorMessage ? <p className="alert">{errorMessage}</p> : null}
 
       {showCreateForm ? (
@@ -114,14 +105,14 @@ export function UserSelectionPage() {
         </form>
       ) : null}
 
-      {isLoading ? <p className="empty-state">Cargando usuarios...</p> : null}
+      {isLoading && users.length === 0 ? <UserListSkeleton /> : null}
 
       {!isLoading && users.length === 0 ? (
         <p className="empty-state">Todavía no hay usuarios. Creá el primero con el botón +.</p>
       ) : null}
 
       <div className="user-list">
-        {users.map((user) => {
+        {users.map((user: UserDto) => {
           const isActive = currentUser?.id === user.id;
 
           return (

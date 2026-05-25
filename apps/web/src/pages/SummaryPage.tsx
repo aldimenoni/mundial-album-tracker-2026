@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import type { AlbumSummaryDto, UserStickerDto } from "@mundial-album/shared";
 import { api } from "../api/client";
 import { getErrorMessage } from "../api/error-message";
@@ -6,38 +6,21 @@ import { AlbumSummaryCard } from "../components/AlbumSummaryCard";
 import { LegendaryMedalsSection } from "../components/LegendaryMedalsSection";
 import { RepeatedStickersModal } from "../components/RepeatedStickersModal";
 import { SpreadProgressList } from "../components/SpreadProgressList";
+import { SummaryPageSkeleton } from "../components/ui/Skeleton";
+import { useQuery } from "../hooks/useQuery";
 import { useRequiredUser } from "../state/user-store";
-import { subscribeAlbumUpdated } from "../utils/album-events";
 
 export function SummaryPage() {
   const currentUser = useRequiredUser();
-  const [summary, setSummary] = useState<AlbumSummaryDto | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const { data: summary, error, isLoading, isFetching } = useQuery(
+    `summary:${currentUser.id}`,
+    () => api.getAlbumSummary(currentUser.id),
+    { staleTime: 30_000 }
+  );
   const [repeatedModalOpen, setRepeatedModalOpen] = useState(false);
   const [repeatedStickers, setRepeatedStickers] = useState<UserStickerDto[]>([]);
   const [isLoadingRepeated, setIsLoadingRepeated] = useState(false);
   const [repeatedErrorMessage, setRepeatedErrorMessage] = useState<string | null>(null);
-
-  const loadSummary = useCallback(async () => {
-    setIsLoading(true);
-    setErrorMessage(null);
-
-    try {
-      const nextSummary = await api.getAlbumSummary(currentUser.id);
-      setSummary(nextSummary);
-    } catch (error: unknown) {
-      setErrorMessage(getErrorMessage(error));
-    } finally {
-      setIsLoading(false);
-    }
-  }, [currentUser.id]);
-
-  useEffect(() => {
-    void loadSummary();
-  }, [loadSummary]);
-
-  useEffect(() => subscribeAlbumUpdated(currentUser.id, () => void loadSummary()), [currentUser.id, loadSummary]);
 
   async function openRepeatedModal(): Promise<void> {
     setRepeatedModalOpen(true);
@@ -47,8 +30,8 @@ export function SummaryPage() {
     try {
       const album = await api.getAlbum(currentUser.id);
       setRepeatedStickers(album.stickers.filter((item) => item.quantityRepeated > 0));
-    } catch (error: unknown) {
-      setRepeatedErrorMessage(getErrorMessage(error));
+    } catch (loadError: unknown) {
+      setRepeatedErrorMessage(getErrorMessage(loadError));
       setRepeatedStickers([]);
     } finally {
       setIsLoadingRepeated(false);
@@ -62,15 +45,18 @@ export function SummaryPage() {
   return (
     <section className="stack">
       <div className="page-heading">
-        <p className="eyebrow">Home</p>
-        <h2>Resumen</h2>
+        <div>
+          <p className="eyebrow">Home</p>
+          <h2>Resumen</h2>
+          {isFetching && summary ? <p className="fetching-indicator">Actualizando...</p> : null}
+        </div>
       </div>
 
-      {errorMessage ? <p className="alert">{errorMessage}</p> : null}
+      {error ? <p className="alert">{getErrorMessage(error)}</p> : null}
       {repeatedErrorMessage && repeatedModalOpen ? (
         <p className="alert">{repeatedErrorMessage}</p>
       ) : null}
-      {isLoading ? <p className="empty-state">Calculando resumen...</p> : null}
+      {isLoading && !summary ? <SummaryPageSkeleton /> : null}
       {summary ? (
         <>
           <AlbumSummaryCard summary={summary} onRepeatedClick={() => void openRepeatedModal()} />

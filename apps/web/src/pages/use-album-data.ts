@@ -2,32 +2,22 @@ import { useCallback, useEffect, useState } from "react";
 import type { AlbumDto, UpdateUserStickerPayload } from "@mundial-album/shared";
 import { api } from "../api/client";
 import { getErrorMessage } from "../api/error-message";
-import { subscribeAlbumUpdated } from "../utils/album-events";
+import { useQuery } from "../hooks/useQuery";
+import { invalidateQuery } from "../lib/query-cache";
 
 export function useAlbumData(userId: string) {
+  const { data, error, isLoading, isFetching, refetch } = useQuery(
+    `album:${userId}`,
+    () => api.getAlbum(userId),
+    { staleTime: 30_000 }
+  );
   const [album, setAlbum] = useState<AlbumDto | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  const loadAlbum = useCallback(async () => {
-    setIsLoading(true);
-    setErrorMessage(null);
-
-    try {
-      const nextAlbum = await api.getAlbum(userId);
-      setAlbum(nextAlbum);
-    } catch (error: unknown) {
-      setErrorMessage(getErrorMessage(error));
-    } finally {
-      setIsLoading(false);
-    }
-  }, [userId]);
 
   useEffect(() => {
-    void loadAlbum();
-  }, [loadAlbum]);
-
-  useEffect(() => subscribeAlbumUpdated(userId, () => void loadAlbum()), [userId, loadAlbum]);
+    if (data) {
+      setAlbum(data);
+    }
+  }, [data]);
 
   const updateSticker = useCallback(
     async (stickerId: string, payload: UpdateUserStickerPayload) => {
@@ -43,15 +33,17 @@ export function useAlbumData(userId: string) {
             }
           : currentAlbum
       );
+      invalidateQuery(`summary:${userId}`);
     },
     [userId]
   );
 
   return {
     album,
-    isLoading,
-    errorMessage,
-    reload: loadAlbum,
+    isLoading: isLoading && !album,
+    isFetching,
+    errorMessage: error ? getErrorMessage(error) : null,
+    reload: refetch,
     updateSticker
   };
 }

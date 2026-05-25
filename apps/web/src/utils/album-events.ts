@@ -1,7 +1,11 @@
+import { invalidateAlbumQueries } from "../lib/query-cache";
+
 export const ALBUM_UPDATED_EVENT = "mundial-album-updated";
 
 export function notifyAlbumUpdated(...userIds: string[]): void {
   for (const userId of userIds) {
+    invalidateAlbumQueries(userId);
+
     window.dispatchEvent(
       new CustomEvent(ALBUM_UPDATED_EVENT, {
         detail: { userId }

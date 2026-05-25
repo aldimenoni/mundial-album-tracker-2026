@@ -1,3 +1,4 @@
+import { Suspense, lazy, useEffect } from "react";
 import type { ReactNode } from "react";
 import {
   Album,
@@ -8,12 +9,24 @@ import {
   UserRound
 } from "lucide-react";
 import { NavLink, Navigate, Route, Routes, useNavigate } from "react-router-dom";
-import { HomePage } from "./pages/HomePage";
-import { MyAlbumPage } from "./pages/MyAlbumPage";
-import { StickerSearchPage } from "./pages/StickerSearchPage";
-import { SummaryPage } from "./pages/SummaryPage";
-import { UserSelectionPage } from "./pages/UserSelectionPage";
+import { RouteFallback } from "./components/ui/Skeleton";
+import { prefetchQuery } from "./hooks/useQuery";
+import { api } from "./api/client";
 import { useUser } from "./state/user-store";
+
+const SummaryPage = lazy(() =>
+  import("./pages/SummaryPage").then((module) => ({ default: module.SummaryPage }))
+);
+const UserSelectionPage = lazy(() =>
+  import("./pages/UserSelectionPage").then((module) => ({ default: module.UserSelectionPage }))
+);
+const StickerSearchPage = lazy(() =>
+  import("./pages/StickerSearchPage").then((module) => ({ default: module.StickerSearchPage }))
+);
+const MyAlbumPage = lazy(() =>
+  import("./pages/MyAlbumPage").then((module) => ({ default: module.MyAlbumPage }))
+);
+const HomePage = lazy(() => import("./pages/HomePage").then((module) => ({ default: module.HomePage })));
 
 const navigationItems = [
   { to: "/", label: "Home", shortLabel: "Home", icon: Home, requiresUser: true },
@@ -38,9 +51,26 @@ function DefaultRoute() {
   return currentUser ? <SummaryPage /> : <Navigate to="/usuarios" replace />;
 }
 
+function LazyPage({ children }: { children: ReactNode }) {
+  return <Suspense fallback={<RouteFallback />}>{children}</Suspense>;
+}
+
 export function App() {
   const { currentUser, setCurrentUser } = useUser();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    void prefetchQuery("stickers:catalog", () => api.listStickers(), 10 * 60_000);
+  }, []);
+
+  useEffect(() => {
+    if (!currentUser) {
+      return;
+    }
+
+    void prefetchQuery(`summary:${currentUser.id}`, () => api.getAlbumSummary(currentUser.id), 30_000);
+    void prefetchQuery(`album:${currentUser.id}`, () => api.getAlbum(currentUser.id), 30_000);
+  }, [currentUser]);
 
   const visibleNavigationItems = navigationItems.filter((item) => {
     if ("public" in item && item.public) {
@@ -91,30 +121,50 @@ export function App() {
 
       <main className="page-shell">
         <Routes>
-          <Route path="/" element={<DefaultRoute />} />
+          <Route
+            path="/"
+            element={
+              <LazyPage>
+                <DefaultRoute />
+              </LazyPage>
+            }
+          />
           <Route
             path="/usuarios"
             element={
-              <GuestOnly>
-                <UserSelectionPage />
-              </GuestOnly>
+              <LazyPage>
+                <GuestOnly>
+                  <UserSelectionPage />
+                </GuestOnly>
+              </LazyPage>
             }
           />
-          <Route path="/buscar" element={<StickerSearchPage />} />
+          <Route
+            path="/buscar"
+            element={
+              <LazyPage>
+                <StickerSearchPage />
+              </LazyPage>
+            }
+          />
           <Route
             path="/mi-album"
             element={
-              <RequireUser>
-                <MyAlbumPage />
-              </RequireUser>
+              <LazyPage>
+                <RequireUser>
+                  <MyAlbumPage />
+                </RequireUser>
+              </LazyPage>
             }
           />
           <Route
             path="/intercambio"
             element={
-              <RequireUser>
-                <HomePage />
-              </RequireUser>
+              <LazyPage>
+                <RequireUser>
+                  <HomePage />
+                </RequireUser>
+              </LazyPage>
             }
           />
           <Route path="/resumen" element={<Navigate to="/" replace />} />
