@@ -21,9 +21,14 @@ export function FloatingBottomNav({ items }: FloatingBottomNavProps) {
   return (
     <nav
       aria-label="Navegacion principal"
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-50 px-4 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)]"
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-50"
     >
-      <div className="pointer-events-auto mx-auto max-w-md rounded-[1.75rem] border border-white/15 bg-panini-navy/80 p-2 shadow-2xl shadow-black/30 backdrop-blur-2xl">
+      <div
+        aria-hidden="true"
+        className="absolute inset-x-0 bottom-0 h-[calc(env(safe-area-inset-bottom,0px)+6.5rem)] bg-gradient-to-t from-panini-navy via-panini-navy/95 to-transparent"
+      />
+      <div className="relative px-4 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] pt-2">
+        <div className="pointer-events-auto mx-auto max-w-md rounded-[1.75rem] border border-white/15 bg-panini-navy/90 p-2 shadow-2xl shadow-black/30 backdrop-blur-2xl">
         <div className="relative grid grid-flow-col auto-cols-fr gap-1">
           {items.map((item) => {
             const Icon = item.icon;
@@ -59,6 +64,7 @@ export function FloatingBottomNav({ items }: FloatingBottomNavProps) {
               </NavLink>
             );
           })}
+        </div>
         </div>
       </div>
     </nav>

@@ -13,8 +13,8 @@ export function AppHeader({ onSignOut }: AppHeaderProps) {
   const { currentUser } = useUser();
 
   return (
-    <header className="fixed inset-x-0 top-0 z-40 border-b border-white/10 bg-panini-navy/75 backdrop-blur-2xl">
-      <div className="h-[env(safe-area-inset-top,0px)] bg-gradient-to-r from-panini-gold via-emerald-400 to-indigo-500 opacity-90" />
+    <header className="fixed inset-x-0 top-0 z-40 border-b border-white/10 bg-panini-navy/90 backdrop-blur-2xl">
+      <div className="h-[env(safe-area-inset-top,0px)] bg-panini-navy" />
       <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3">
         <div className="flex min-w-0 items-center gap-3">
           <motion.img

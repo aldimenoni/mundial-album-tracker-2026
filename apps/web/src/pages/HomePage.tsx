@@ -87,6 +87,8 @@ export function HomePage() {
 
       notifyAlbumUpdated(exchangeResult.fromUserSummary.user.id, exchangeResult.toUserSummary.user.id);
       setSuccessMessage(exchangeResult.message);
+      invalidateQueriesByPrefix(`summary:${currentUser.id}`);
+      invalidateQueriesByPrefix(`summary:${comparison.otherUser.id}`);
       await loadPageData();
     } catch (executeError: unknown) {
       setErrorMessage(getErrorMessage(executeError));

@@ -92,7 +92,15 @@ export function App() {
   }
 
   return (
-    <div className="relative flex h-dvh flex-col overflow-hidden">
+    <div className="relative flex min-h-dvh flex-col overflow-hidden bg-panini-navy">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 -z-10 bg-panini-navy"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle at 15% 10%, rgba(246, 196, 83, 0.08), transparent 28%), radial-gradient(circle at 85% 20%, rgba(16, 185, 129, 0.1), transparent 32%), radial-gradient(circle at 50% 100%, rgba(18, 61, 154, 0.35), transparent 45%), linear-gradient(165deg, #081b4b 0%, #123d9a 42%, #0d5f4a 100%)"
+        }}
+      />
       <AppHeader {...(currentUser ? { onSignOut: handleSignOut } : {})} />
 
       <main className="relative z-10 mx-auto min-h-0 w-full max-w-3xl flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain px-4 pb-[calc(env(safe-area-inset-bottom,0px)+6.5rem)] pt-[calc(env(safe-area-inset-top,0px)+4.75rem)] [-webkit-overflow-scrolling:touch]">

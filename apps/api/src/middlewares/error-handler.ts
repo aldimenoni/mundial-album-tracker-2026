@@ -5,8 +5,11 @@ import { isHttpError } from "../utils/http-error.js";
 
 export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
   if (error instanceof ZodError) {
+    const firstIssue = error.issues[0];
+    const detail = firstIssue?.message ?? "Datos inválidos.";
+
     res.status(400).json({
-      message: "Request validation failed",
+      message: detail,
       issues: error.flatten()
     });
     return;

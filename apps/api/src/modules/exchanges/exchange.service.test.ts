@@ -114,6 +114,17 @@ describe("ExchangeService", () => {
     );
     assert.equal(
       isValidAllOneToOneSelection(
+        {
+          stickersGivenByMe: ["ESP7", "ARG12"],
+          stickersGivenByOther: ["FRA8", "BRA5"]
+        },
+        ["ARG12", "ESP7"],
+        ["BRA5", "FRA8", "GER9"]
+      ),
+      true
+    );
+    assert.equal(
+      isValidAllOneToOneSelection(
         { stickersGivenByMe: ["ARG12"], stickersGivenByOther: ["BRA5"] },
         ["ARG12", "ESP7"],
         ["BRA5", "FRA8"]

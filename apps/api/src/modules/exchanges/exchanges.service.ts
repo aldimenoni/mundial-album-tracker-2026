@@ -129,12 +129,15 @@ function validateSuggestedOneToOneSelection(
   canGive: string[],
   canReceive: string[]
 ): SettlementTransferPlan {
-  if (isValidOneToOneSelection(selection, canGive, canReceive)) {
-    return {
-      stickersGivenByMe: selection.stickersGivenByMe,
-      stickersGivenByOther: selection.stickersGivenByOther,
-      settledCount: 1
-    };
+  if (selection.stickersGivenByMe.length === 0 && selection.stickersGivenByOther.length === 0) {
+    throw new HttpError(400, "Seleccioná al menos un intercambio uno a uno.");
+  }
+
+  if (selection.stickersGivenByMe.length !== selection.stickersGivenByOther.length) {
+    throw new HttpError(
+      400,
+      "Cada figurita que das debe tener una figurita que recibís en el intercambio."
+    );
   }
 
   if (isValidAllOneToOneSelection(selection, canGive, canReceive)) {
@@ -142,6 +145,14 @@ function validateSuggestedOneToOneSelection(
       stickersGivenByMe: selection.stickersGivenByMe,
       stickersGivenByOther: selection.stickersGivenByOther,
       settledCount: selection.stickersGivenByMe.length
+    };
+  }
+
+  if (isValidOneToOneSelection(selection, canGive, canReceive)) {
+    return {
+      stickersGivenByMe: selection.stickersGivenByMe,
+      stickersGivenByOther: selection.stickersGivenByOther,
+      settledCount: 1
     };
   }
 
@@ -366,7 +377,8 @@ export async function createExchangeProposal(
   const snapshot = await buildExchangeSnapshot(
     input.fromUserId,
     input.toUserId,
-    input.notes
+    input.notes,
+    toSelection(input.stickersGivenByMe, input.stickersGivenByOther)
   );
 
   const proposal = await prisma.exchangeProposal.create({

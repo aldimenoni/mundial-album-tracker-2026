@@ -149,16 +149,56 @@ export function buildAllOneToOneSelection(
   };
 }
 
-function selectionsMatch(
-  left: { stickersGivenByMe: string[]; stickersGivenByOther: string[] },
-  right: { stickersGivenByMe: string[]; stickersGivenByOther: string[] }
-): boolean {
-  return (
-    left.stickersGivenByMe.length === right.stickersGivenByMe.length &&
-    left.stickersGivenByOther.length === right.stickersGivenByOther.length &&
-    left.stickersGivenByMe.every((code, index) => code === right.stickersGivenByMe[index]) &&
-    left.stickersGivenByOther.every((code, index) => code === right.stickersGivenByOther[index])
-  );
+type ExchangePair = {
+  give: string;
+  receive: string;
+};
+
+function toExchangePairKey(give: string, receive: string): string {
+  return `${give}→${receive}`;
+}
+
+function selectionToPairs(
+  selection: { stickersGivenByMe: string[]; stickersGivenByOther: string[] }
+): ExchangePair[] | null {
+  if (selection.stickersGivenByMe.length !== selection.stickersGivenByOther.length) {
+    return null;
+  }
+
+  const pairs: ExchangePair[] = [];
+
+  for (let index = 0; index < selection.stickersGivenByMe.length; index += 1) {
+    const give = selection.stickersGivenByMe[index];
+    const receive = selection.stickersGivenByOther[index];
+
+    if (!give || !receive) {
+      return null;
+    }
+
+    pairs.push({ give, receive });
+  }
+
+  return pairs;
+}
+
+function suggestedPairs(canGive: string[], canReceive: string[]): ExchangePair[] {
+  return buildOneToOneSuggestions(canGive, canReceive).flatMap((pair) => {
+    if (!pair.give || !pair.receive) {
+      return [];
+    }
+
+    return [{ give: pair.give, receive: pair.receive }];
+  });
+}
+
+function pairSetsMatch(left: ExchangePair[], right: ExchangePair[]): boolean {
+  if (left.length !== right.length) {
+    return false;
+  }
+
+  const rightKeys = new Set(right.map((pair) => toExchangePairKey(pair.give, pair.receive)));
+
+  return left.every((pair) => rightKeys.has(toExchangePairKey(pair.give, pair.receive)));
 }
 
 export function isValidOneToOneSelection(
@@ -187,13 +227,19 @@ export function isValidAllOneToOneSelection(
   canGive: string[],
   canReceive: string[]
 ): boolean {
-  const expected = buildAllOneToOneSelection(canGive, canReceive);
+  const expectedPairs = suggestedPairs(canGive, canReceive);
 
-  if (expected.stickersGivenByMe.length < 2) {
+  if (expectedPairs.length < 2) {
     return false;
   }
 
-  return selectionsMatch(selection, expected);
+  const selectedPairs = selectionToPairs(selection);
+
+  if (!selectedPairs) {
+    return false;
+  }
+
+  return pairSetsMatch(selectedPairs, expectedPairs);
 }
 
 export function toExchangeStickerState(
