@@ -4,20 +4,23 @@ import {
   Home,
   LogOut,
   Repeat2,
+  Search,
   UserRound
 } from "lucide-react";
 import { NavLink, Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import { HomePage } from "./pages/HomePage";
 import { MyAlbumPage } from "./pages/MyAlbumPage";
+import { StickerSearchPage } from "./pages/StickerSearchPage";
 import { SummaryPage } from "./pages/SummaryPage";
 import { UserSelectionPage } from "./pages/UserSelectionPage";
 import { useUser } from "./state/user-store";
 
 const navigationItems = [
-  { to: "/", label: "Home", shortLabel: "Home", icon: Home },
-  { to: "/usuarios", label: "Usuario", shortLabel: "Usuario", icon: UserRound },
-  { to: "/mi-album", label: "Mi album", shortLabel: "Album", icon: Album },
-  { to: "/intercambio", label: "Intercambio", shortLabel: "Cambio", icon: Repeat2 }
+  { to: "/", label: "Home", shortLabel: "Home", icon: Home, requiresUser: true },
+  { to: "/usuarios", label: "Usuario", shortLabel: "Usuario", icon: UserRound, guestOnly: true },
+  { to: "/buscar", label: "Buscar", shortLabel: "Buscar", icon: Search, public: true },
+  { to: "/mi-album", label: "Mi album", shortLabel: "Album", icon: Album, requiresUser: true },
+  { to: "/intercambio", label: "Intercambio", shortLabel: "Cambio", icon: Repeat2, requiresUser: true }
 ] as const;
 
 function RequireUser({ children }: { children: ReactNode }) {
@@ -39,9 +42,17 @@ export function App() {
   const { currentUser, setCurrentUser } = useUser();
   const navigate = useNavigate();
 
-  const visibleNavigationItems = currentUser
-    ? navigationItems.filter((item) => item.to !== "/usuarios")
-    : navigationItems.filter((item) => item.to === "/usuarios");
+  const visibleNavigationItems = navigationItems.filter((item) => {
+    if ("public" in item && item.public) {
+      return true;
+    }
+
+    if (currentUser) {
+      return !("guestOnly" in item && item.guestOnly);
+    }
+
+    return "guestOnly" in item && item.guestOnly;
+  });
 
   function handleSignOut(): void {
     setCurrentUser(null);
@@ -89,6 +100,7 @@ export function App() {
               </GuestOnly>
             }
           />
+          <Route path="/buscar" element={<StickerSearchPage />} />
           <Route
             path="/mi-album"
             element={

@@ -1,9 +1,18 @@
 import { Router } from "express";
 import { asyncHandler } from "../../utils/async-handler.js";
-import { listStickersQuerySchema } from "./stickers.schemas.js";
-import { listStickers } from "./stickers.service.js";
+import { listStickersQuerySchema, stickerCodeParamSchema } from "./stickers.schemas.js";
+import { findUsersMissingSticker, listStickers } from "./stickers.service.js";
 
 export const stickersRouter = Router();
+
+stickersRouter.get(
+  "/:code/missing-users",
+  asyncHandler(async (req, res) => {
+    const { code } = stickerCodeParamSchema.parse(req.params);
+    const result = await findUsersMissingSticker(code);
+    res.json(result);
+  })
+);
 
 stickersRouter.get(
   "/",

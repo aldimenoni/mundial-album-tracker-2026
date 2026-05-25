@@ -89,6 +89,16 @@ export interface CompareAlbumDto {
   otherStatus: CompareAlbumUserStatus;
 }
 
+export interface StickerMissingUserDto {
+  user: UserDto;
+  quantityOwned: number;
+}
+
+export interface StickerMissingUsersDto {
+  sticker: StickerDto;
+  users: StickerMissingUserDto[];
+}
+
 export interface ApiErrorResponse {
   message: string;
   issues?: unknown;

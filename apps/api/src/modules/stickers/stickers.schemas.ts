@@ -8,3 +8,9 @@ export const listStickersQuerySchema = z.object({
 });
 
 export type ListStickersQuery = z.infer<typeof listStickersQuerySchema>;
+
+export const stickerCodeParamSchema = z.object({
+  code: z.string().trim().min(1).transform((value) => value.toUpperCase())
+});
+
+export type StickerCodeParam = z.infer<typeof stickerCodeParamSchema>;

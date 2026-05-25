@@ -9,6 +9,7 @@ import type {
   ExchangeProposalDto,
   PendingSettlementDto,
   StickerDto,
+  StickerMissingUsersDto,
   UpdateUserStickerPayload,
   UserDto,
   UserStickerDto
@@ -76,6 +77,11 @@ export const api = {
 
     const query = params.toString();
     return request<StickerDto[]>(`/stickers${query ? `?${query}` : ""}`);
+  },
+
+  findUsersMissingSticker(code: string): Promise<StickerMissingUsersDto> {
+    const normalizedCode = encodeURIComponent(code.trim().toUpperCase());
+    return request<StickerMissingUsersDto>(`/stickers/${normalizedCode}/missing-users`);
   },
 
   createUser(payload: CreateUserPayload): Promise<UserDto> {

@@ -37,9 +37,16 @@
   box-sizing: border-box;
 }
 
+html,
+body,
+#root {
+  height: 100%;
+}
+
 body {
   margin: 0;
   min-width: 320px;
+  overflow: hidden;
   overscroll-behavior-y: none;
   background:
     radial-gradient(circle at top left, rgba(30, 79, 214, 0.12), transparent 28%),
@@ -72,8 +79,11 @@ a {
 .app-shell {
   display: flex;
   flex-direction: column;
-  min-height: 100dvh;
-  min-height: 100vh;
+  height: 100%;
+  max-height: 100dvh;
+  max-height: 100vh;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .topbar {
@@ -93,8 +103,7 @@ a {
     calc(var(--page-inline) + var(--safe-right))
     8px
     calc(var(--page-inline) + var(--safe-left));
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 20;
 }
 
@@ -228,19 +237,16 @@ a {
   backdrop-filter: blur(16px);
   background: rgba(255, 255, 255, 0.94);
   border-top: 1px solid var(--line);
-  bottom: 0;
   box-shadow: 0 -8px 24px rgba(11, 31, 75, 0.08);
   display: grid;
+  flex-shrink: 0;
   gap: 4px;
   grid-auto-columns: 1fr;
   grid-auto-flow: column;
-  left: 0;
   padding:
     6px calc(8px + var(--safe-right))
     calc(6px + var(--safe-bottom))
     calc(8px + var(--safe-left));
-  position: fixed;
-  right: 0;
   z-index: 30;
 }
 
@@ -278,11 +284,16 @@ a {
   flex: 1;
   margin: 0 auto;
   max-width: 720px;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
   padding:
     16px calc(var(--page-inline) + var(--safe-right))
-    calc(var(--bottom-nav-height) + var(--safe-bottom) + 20px)
+    calc(var(--safe-bottom) + 20px)
     calc(var(--page-inline) + var(--safe-left));
   width: 100%;
+  -webkit-overflow-scrolling: touch;
 }
 
 .stack {
@@ -593,6 +604,41 @@ a {
 
 .empty-state {
   color: var(--muted);
+  margin: 0;
+}
+
+.sticker-search-form {
+  margin-top: 0;
+}
+
+.sticker-search-button {
+  align-items: center;
+  display: inline-flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.sticker-search-result {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.sticker-search-summary h3 {
+  font-size: 1.35rem;
+  margin: 4px 0 0;
+}
+
+.sticker-search-meta {
+  color: var(--muted);
+  font-weight: 600;
+  margin: 6px 0 0;
+}
+
+.sticker-search-result-label {
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 700;
   margin: 0;
 }
 
